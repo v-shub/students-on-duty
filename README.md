@@ -15,18 +15,18 @@
 
 ### База данных
 
-СУБД: PostgeSQL  
-Хостинг: [Supabase](https://supabase.com/)  
-Схема БД: [Назначение_дежурного](https://drawsql.app/teams/me-1254/diagrams/naznachenie-dezhurnogo-2)
+- СУБД: PostgeSQL  
+- Хостинг: [Supabase](https://supabase.com/)  
+- Схема БД: [Назначение_дежурного](https://drawsql.app/teams/me-1254/diagrams/naznachenie-dezhurnogo-2)
 
 ### Бэкенд
 
-Node.js  
-Express
+- Node.js  
+- Express
 
 ### Фронтенд
 
-Flutter  
+- Flutter  
 
 
 ## Структура проекта
