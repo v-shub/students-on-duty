@@ -22,7 +22,7 @@ export class DutySchedulesService {
   }
 
   async findOne(id: number): Promise<DutySchedule> {
-    const dutySchedule = await this.dutySchedulesRepository.findOne(id);
+    const dutySchedule = await this.dutySchedulesRepository.findOne({ where: { id } });
     if (!dutySchedule) {
       throw new NotFoundException();
     }

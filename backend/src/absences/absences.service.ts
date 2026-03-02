@@ -22,7 +22,7 @@ export class AbsencesService {
   }
 
   async findOne(id: number): Promise<Absence> {
-    const absence = await this.absencesRepository.findOne(id);
+    const absence = await this.absencesRepository.findOne({ where: { id } });
     if (!absence) {
       throw new NotFoundException();
     }

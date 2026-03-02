@@ -22,7 +22,7 @@ export class GroupsService {
   }
 
   async findOne(id: number): Promise<Group> {
-    const group = await this.groupsRepository.findOne(id);
+    const group = await this.groupsRepository.findOne({ where: { id } });
     if (!group) {
       throw new NotFoundException();
     }

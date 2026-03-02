@@ -21,20 +21,20 @@ export class DutyDaysService {
     return this.dutyDaysRepository.find();
   }
 
-  async findOne(id: number): Promise<DutyDay> {
-    const dutyDay = await this.dutyDaysRepository.findOne(id);
+  async findOne(scheduleId: number): Promise<DutyDay> {
+    const dutyDay = await this.dutyDaysRepository.findOne({ where: { schedule_id: scheduleId } });
     if (!dutyDay) {
       throw new NotFoundException();
     }
     return dutyDay;
   }
 
-  async update(id: number, updateDutyDayDto: UpdateDutyDayDto): Promise<DutyDay> {
-    await this.dutyDaysRepository.update(id, updateDutyDayDto);
-    return this.findOne(id);
+  async update(scheduleId: number, updateDutyDayDto: UpdateDutyDayDto): Promise<DutyDay> {
+    await this.dutyDaysRepository.update({ schedule_id: scheduleId }, updateDutyDayDto);
+    return this.findOne(scheduleId);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.dutyDaysRepository.delete(id);
+  async remove(scheduleId: number): Promise<void> {
+    await this.dutyDaysRepository.delete({ schedule_id: scheduleId });
   }
 }

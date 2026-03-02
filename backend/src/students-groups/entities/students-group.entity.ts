@@ -1,13 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { Entity, PrimaryColumn } from 'typeorm';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('students_groups')
 export class StudentsGroup {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
+  @ApiProperty({ description: 'ID группы' })
+  @PrimaryColumn()
   group_id: number;
 
-  @Column()
+  @ApiProperty({ description: 'ID студента' })
+  @PrimaryColumn()
   student_id: number;
 }

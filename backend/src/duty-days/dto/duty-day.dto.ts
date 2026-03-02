@@ -1,21 +1,26 @@
+import { IsInt, IsBoolean, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 export class CreateDutyDayDto {
+  @ApiProperty({ description: 'ID расписания' })
+  @IsInt()
   schedule_id: number;
-  is_monday?: boolean;
-  is_tuesday?: boolean;
-  is_wednesday?: boolean;
-  is_thursday?: boolean;
-  is_friday?: boolean;
-  is_saturday?: boolean;
-  is_sunday?: boolean;
+
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_monday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_tuesday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_wednesday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_thursday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_friday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_saturday?: boolean;
+  @ApiPropertyOptional({ default: false }) @IsBoolean() @IsOptional() is_sunday?: boolean;
 }
 
 export class UpdateDutyDayDto {
-  schedule_id?: number;
-  is_monday?: boolean;
-  is_tuesday?: boolean;
-  is_wednesday?: boolean;
-  is_thursday?: boolean;
-  is_friday?: boolean;
-  is_saturday?: boolean;
-  is_sunday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_monday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_tuesday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_wednesday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_thursday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_friday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_saturday?: boolean;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() is_sunday?: boolean;
 }

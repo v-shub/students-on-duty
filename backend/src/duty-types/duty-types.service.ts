@@ -22,7 +22,7 @@ export class DutyTypesService {
   }
 
   async findOne(id: number): Promise<DutyType> {
-    const dutyType = await this.dutyTypesRepository.findOne(id);
+    const dutyType = await this.dutyTypesRepository.findOne({ where: { id } });
     if (!dutyType) {
       throw new NotFoundException();
     }
