@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Delete, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { StudentsGroupsService } from './students-groups.service';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('groups')
-@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@ApiBearerAuth('bearer')
 @UseGuards(AuthGuard)
 @Controller('groups/:groupId/students')
 export class StudentsGroupsController {

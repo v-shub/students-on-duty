@@ -2,14 +2,14 @@ import {
   Controller, Get, Post, Put, Delete,
   Body, Param, Query, UseGuards, ParseIntPipe, HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DutyEventsService } from './duty-events.service';
 import { GenerateDutyEventDto, UpdateDutyEventDto } from './dto/duty-event.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('duty-events')
-@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@ApiBearerAuth('bearer')
 @UseGuards(AuthGuard)
 @Controller('duty-events')
 export class DutyEventsController {

@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto, UpdateGroupDto } from './dto/group.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('groups')
-@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@ApiBearerAuth('bearer')
 @UseGuards(AuthGuard)
 @Controller('groups')
 export class GroupsController {

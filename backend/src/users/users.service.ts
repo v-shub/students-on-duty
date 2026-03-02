@@ -9,12 +9,14 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto/user.dto';
 import { User } from './entities/user.entity';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly repo: Repository<User>,
+    private readonly authService: AuthService,
   ) {}
 
   /** Регистрация нового старосты */
@@ -30,17 +32,19 @@ export class UsersService {
     return result;
   }
 
-  /** Логин — возвращает пользователя (без хэша) если пароль верный */
-  async login(dto: LoginUserDto): Promise<Omit<User, 'password_hash'>> {
+  /** Логин — возвращает JWT токен и данные пользователя */
+  async login(dto: LoginUserDto): Promise<{ accessToken: string; user: Omit<User, 'password_hash'> }> {
     const user = await this.repo.findOne({ where: { username: dto.username } });
     if (!user) throw new UnauthorizedException('Неверный логин или пароль');
 
     const valid = await bcrypt.compare(dto.password, user.password_hash);
     if (!valid) throw new UnauthorizedException('Неверный логин или пароль');
 
+    const accessToken = this.authService.generateToken(user.id, user.username);
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash: _, ...result } = user;
-    return result;
+    return { accessToken, user: result };
   }
 
   /** Получить профиль по ID */

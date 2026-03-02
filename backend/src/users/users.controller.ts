@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto/user.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
@@ -27,7 +27,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Получить свой профиль' })
-  @ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+  @ApiBearerAuth('bearer')
   @ApiResponse({ status: 200, description: 'Профиль пользователя' })
   @UseGuards(AuthGuard)
   @Get('me')
@@ -36,7 +36,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Обновить свой профиль' })
-  @ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+  @ApiBearerAuth('bearer')
   @ApiResponse({ status: 200, description: 'Профиль обновлён' })
   @UseGuards(AuthGuard)
   @Put('me')

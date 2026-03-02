@@ -6,9 +6,10 @@ import { DutySchedule } from './entities/duty-schedule.entity';
 import { DutyDay } from '../duty-days/entities/duty-day.entity';
 import { Group } from '../groups/entities/group.entity';
 import { DutyType } from '../duty-types/entities/duty-type.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DutySchedule, DutyDay, Group, DutyType])],
+  imports: [TypeOrmModule.forFeature([DutySchedule, DutyDay, Group, DutyType]), AuthModule],
   controllers: [DutySchedulesController],
   providers: [DutySchedulesService],
   exports: [DutySchedulesService],

@@ -1,12 +1,12 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { DutyTypesService } from './duty-types.service';
 import { CreateDutyTypeDto, UpdateDutyTypeDto } from './dto/duty-type.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('duty-types')
-@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@ApiBearerAuth('bearer')
 @UseGuards(AuthGuard)
 @Controller('duty-types')
 export class DutyTypesController {

@@ -11,6 +11,7 @@ import { DutyDaysModule } from './duty-days/duty-days.module';
 import { AbsencesModule } from './absences/absences.module';
 import { StudentsGroupsModule } from './students-groups/students-groups.module';
 import { DutySchedulerModule } from './scheduler/scheduler.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DutySchedulerModule } from './scheduler/scheduler.module';
       ssl: { rejectUnauthorized: false },
       logging: true,
     }),
+    AuthModule,
     UsersModule,
     StudentsModule,
     GroupsModule,

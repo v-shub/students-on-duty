@@ -9,6 +9,7 @@ import { Student } from '../students/entities/student.entity';
 import { StudentsGroup } from '../students-groups/entities/students-group.entity';
 import { Absence } from '../absences/entities/absence.entity';
 import { Group } from '../groups/entities/group.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { Group } from '../groups/entities/group.entity';
       Absence,
       Group,
     ]),
+    AuthModule,
   ],
   controllers: [DutyEventsController],
   providers: [DutyEventsService],
