@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { AbsencesService } from './absences.service';
 import { CreateAbsenceDto, UpdateAbsenceDto } from './dto/absence.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('absences')
+@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@UseGuards(AuthGuard)
 @Controller('absences')
 export class AbsencesController {
   constructor(private readonly absencesService: AbsencesService) {}
@@ -11,15 +15,19 @@ export class AbsencesController {
   @ApiOperation({ summary: 'Зарегистрировать отсутствие студента' })
   @ApiResponse({ status: 201, description: 'Отсутствие зарегистрировано' })
   @Post()
-  async create(@Body() createAbsenceDto: CreateAbsenceDto) {
-    return this.absencesService.create(createAbsenceDto);
+  create(@CurrentUser() userId: number, @Body() dto: CreateAbsenceDto) {
+    return this.absencesService.create(userId, dto);
   }
 
-  @ApiOperation({ summary: 'Получить список отсутствий' })
+  @ApiOperation({ summary: 'Список отсутствий своих студентов' })
+  @ApiQuery({ name: 'student_id', required: false, description: 'Фильтр по студенту' })
   @ApiResponse({ status: 200, description: 'Список отсутствий' })
   @Get()
-  async findAll(@Query() query: any) {
-    return this.absencesService.findAll(query);
+  findAll(
+    @CurrentUser() userId: number,
+    @Query('student_id') studentId?: string,
+  ) {
+    return this.absencesService.findAll(userId, studentId ? +studentId : undefined);
   }
 
   @ApiOperation({ summary: 'Получить отсутствие по ID' })
@@ -27,25 +35,28 @@ export class AbsencesController {
   @ApiResponse({ status: 200, description: 'Отсутствие найдено' })
   @ApiResponse({ status: 404, description: 'Отсутствие не найдено' })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.absencesService.findOne(+id);
+  findOne(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.absencesService.findOne(userId, id);
   }
 
   @ApiOperation({ summary: 'Обновить запись об отсутствии' })
   @ApiParam({ name: 'id', description: 'ID записи об отсутствии' })
   @ApiResponse({ status: 200, description: 'Отсутствие обновлено' })
-  @ApiResponse({ status: 404, description: 'Отсутствие не найдено' })
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateAbsenceDto: UpdateAbsenceDto) {
-    return this.absencesService.update(+id, updateAbsenceDto);
+  update(
+    @CurrentUser() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateAbsenceDto,
+  ) {
+    return this.absencesService.update(userId, id, dto);
   }
 
   @ApiOperation({ summary: 'Удалить запись об отсутствии' })
   @ApiParam({ name: 'id', description: 'ID записи об отсутствии' })
-  @ApiResponse({ status: 200, description: 'Отсутствие удалено' })
-  @ApiResponse({ status: 404, description: 'Отсутствие не найдено' })
+  @ApiResponse({ status: 204, description: 'Отсутствие удалено' })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.absencesService.remove(+id);
+  @HttpCode(204)
+  remove(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.absencesService.remove(userId, id);
   }
 }

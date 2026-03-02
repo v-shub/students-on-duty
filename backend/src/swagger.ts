@@ -2,8 +2,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const setupSwagger = (app) => {
   const config = new DocumentBuilder()
-    .setTitle('Backend API')
-    .setDescription('API документация для backend')
+    .setTitle('Система автоматического назначения дежурного API')
+    .setDescription('API документация')
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'bearer')
     .build();

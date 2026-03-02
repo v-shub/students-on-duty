@@ -1,25 +1,40 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  Controller, Get, Post, Put, Delete,
+  Body, Param, Query, UseGuards, ParseIntPipe, HttpCode,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader, ApiQuery } from '@nestjs/swagger';
 import { DutyEventsService } from './duty-events.service';
-import { CreateDutyEventDto, UpdateDutyEventDto } from './dto/duty-event.dto';
+import { GenerateDutyEventDto, UpdateDutyEventDto } from './dto/duty-event.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('duty-events')
+@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@UseGuards(AuthGuard)
 @Controller('duty-events')
 export class DutyEventsController {
   constructor(private readonly dutyEventsService: DutyEventsService) {}
 
-  @ApiOperation({ summary: 'Создать событие дежурства' })
-  @ApiResponse({ status: 201, description: 'Событие создано' })
-  @Post()
-  async create(@Body() createDutyEventDto: CreateDutyEventDto) {
-    return this.dutyEventsService.create(createDutyEventDto);
+  @ApiOperation({
+    summary: 'Ручная генерация событий',
+    description: 'Создаёт события дежурства на указанную дату для расписания. Студенты выбираются автоматически по минимальному duty_score с учётом отсутствий.',
+  })
+  @ApiResponse({ status: 201, description: 'События созданы' })
+  @ApiResponse({ status: 400, description: 'Нет доступных студентов или расписание неактивно' })
+  @Post('generate')
+  generate(@CurrentUser() userId: number, @Body() dto: GenerateDutyEventDto) {
+    return this.dutyEventsService.generateManual(userId, dto.schedule_id, dto.date);
   }
 
-  @ApiOperation({ summary: 'Получить список событий дежурств' })
+  @ApiOperation({ summary: 'Список событий дежурств' })
+  @ApiQuery({ name: 'schedule_id', required: false, description: 'Фильтр по расписанию' })
   @ApiResponse({ status: 200, description: 'Список событий' })
   @Get()
-  async findAll(@Query() query: any) {
-    return this.dutyEventsService.findAll(query);
+  findAll(
+    @CurrentUser() userId: number,
+    @Query('schedule_id') scheduleId?: string,
+  ) {
+    return this.dutyEventsService.findAll(userId, scheduleId ? +scheduleId : undefined);
   }
 
   @ApiOperation({ summary: 'Получить событие по ID' })
@@ -27,25 +42,32 @@ export class DutyEventsController {
   @ApiResponse({ status: 200, description: 'Событие найдено' })
   @ApiResponse({ status: 404, description: 'Событие не найдено' })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.dutyEventsService.findOne(+id);
+  findOne(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.dutyEventsService.findOne(userId, id);
   }
 
-  @ApiOperation({ summary: 'Обновить событие дежурства' })
+  @ApiOperation({
+    summary: 'Обновить статус события',
+    description: 'completed → +score, missed → -score, missed_approved → без изменений score',
+  })
   @ApiParam({ name: 'id', description: 'ID события' })
-  @ApiResponse({ status: 200, description: 'Событие обновлено' })
-  @ApiResponse({ status: 404, description: 'Событие не найдено' })
-  @Put(':id')
-  async update(@Param('id') id: string, @Body() updateDutyEventDto: UpdateDutyEventDto) {
-    return this.dutyEventsService.update(+id, updateDutyEventDto);
+  @ApiResponse({ status: 200, description: 'Статус обновлён, score пересчитан' })
+  @Put(':id/status')
+  updateStatus(
+    @CurrentUser() userId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateDutyEventDto,
+  ) {
+    return this.dutyEventsService.updateStatus(userId, id, dto);
   }
 
-  @ApiOperation({ summary: 'Удалить событие дежурства' })
+  @ApiOperation({ summary: 'Удалить событие (только pending)' })
   @ApiParam({ name: 'id', description: 'ID события' })
-  @ApiResponse({ status: 200, description: 'Событие удалено' })
-  @ApiResponse({ status: 404, description: 'Событие не найдено' })
+  @ApiResponse({ status: 204, description: 'Событие удалено' })
+  @ApiResponse({ status: 400, description: 'Нельзя удалить завершённое событие' })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.dutyEventsService.remove(+id);
+  @HttpCode(204)
+  remove(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.dutyEventsService.remove(userId, id);
   }
 }

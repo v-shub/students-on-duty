@@ -10,7 +10,7 @@ import { DutyEventsModule } from './duty-events/duty-events.module';
 import { DutyDaysModule } from './duty-days/duty-days.module';
 import { AbsencesModule } from './absences/absences.module';
 import { StudentsGroupsModule } from './students-groups/students-groups.module';
-
+import { DutySchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
   imports: [
@@ -36,6 +36,7 @@ import { StudentsGroupsModule } from './students-groups/students-groups.module';
     DutyDaysModule,
     AbsencesModule,
     StudentsGroupsModule,
+    DutySchedulerModule,
   ],
 })
 export class AppModule {}

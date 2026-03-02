@@ -1,11 +1,7 @@
-import { IsString, IsInt, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateGroupDto {
-  @ApiProperty({ description: 'ID пользователя-владельца группы' })
-  @IsInt()
-  user_id: number;
-
   @ApiProperty({ description: 'Название группы' })
   @IsString()
   name: string;
@@ -17,11 +13,6 @@ export class CreateGroupDto {
 }
 
 export class UpdateGroupDto {
-  @ApiPropertyOptional({ description: 'ID пользователя-владельца группы' })
-  @IsInt()
-  @IsOptional()
-  user_id?: number;
-
   @ApiPropertyOptional({ description: 'Название группы' })
   @IsString()
   @IsOptional()

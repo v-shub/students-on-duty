@@ -1,25 +1,29 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { DutyTypesService } from './duty-types.service';
 import { CreateDutyTypeDto, UpdateDutyTypeDto } from './dto/duty-type.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('duty-types')
+@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@UseGuards(AuthGuard)
 @Controller('duty-types')
 export class DutyTypesController {
   constructor(private readonly dutyTypesService: DutyTypesService) {}
 
-  @ApiOperation({ summary: 'Создать тип дежурства' })
+  @ApiOperation({ summary: 'Создать пользовательский тип дежурства' })
   @ApiResponse({ status: 201, description: 'Тип дежурства создан' })
   @Post()
-  async create(@Body() createDutyTypeDto: CreateDutyTypeDto) {
-    return this.dutyTypesService.create(createDutyTypeDto);
+  create(@CurrentUser() userId: number, @Body() dto: CreateDutyTypeDto) {
+    return this.dutyTypesService.create(userId, dto);
   }
 
-  @ApiOperation({ summary: 'Получить список типов дежурств' })
+  @ApiOperation({ summary: 'Список типов дежурств (системные + свои)' })
   @ApiResponse({ status: 200, description: 'Список типов дежурств' })
   @Get()
-  async findAll(@Query() query: any) {
-    return this.dutyTypesService.findAll(query);
+  findAll(@CurrentUser() userId: number) {
+    return this.dutyTypesService.findAll(userId);
   }
 
   @ApiOperation({ summary: 'Получить тип дежурства по ID' })
@@ -27,25 +31,26 @@ export class DutyTypesController {
   @ApiResponse({ status: 200, description: 'Тип дежурства найден' })
   @ApiResponse({ status: 404, description: 'Тип дежурства не найден' })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.dutyTypesService.findOne(+id);
+  findOne(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.dutyTypesService.findOne(userId, id);
   }
 
-  @ApiOperation({ summary: 'Обновить тип дежурства' })
+  @ApiOperation({ summary: 'Обновить свой тип дежурства' })
   @ApiParam({ name: 'id', description: 'ID типа дежурства' })
-  @ApiResponse({ status: 200, description: 'Тип дежурства обновлен' })
-  @ApiResponse({ status: 404, description: 'Тип дежурства не найден' })
+  @ApiResponse({ status: 200, description: 'Тип дежурства обновлён' })
+  @ApiResponse({ status: 403, description: 'Системные типы нельзя изменять' })
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateDutyTypeDto: UpdateDutyTypeDto) {
-    return this.dutyTypesService.update(+id, updateDutyTypeDto);
+  update(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateDutyTypeDto) {
+    return this.dutyTypesService.update(userId, id, dto);
   }
 
-  @ApiOperation({ summary: 'Удалить тип дежурства' })
+  @ApiOperation({ summary: 'Удалить свой тип дежурства' })
   @ApiParam({ name: 'id', description: 'ID типа дежурства' })
-  @ApiResponse({ status: 200, description: 'Тип дежурства удален' })
-  @ApiResponse({ status: 404, description: 'Тип дежурства не найден' })
+  @ApiResponse({ status: 204, description: 'Тип дежурства удалён' })
+  @ApiResponse({ status: 403, description: 'Системные типы нельзя удалять' })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.dutyTypesService.remove(+id);
+  @HttpCode(204)
+  remove(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.dutyTypesService.remove(userId, id);
   }
 }

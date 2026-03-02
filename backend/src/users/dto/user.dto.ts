@@ -1,44 +1,51 @@
-import { IsString, IsEmail, IsOptional, IsPhoneNumber } from 'class-validator';
+import { IsString, IsEmail, IsOptional, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateUserDto {
-  @ApiProperty()
+export class RegisterUserDto {
+  @ApiProperty({ description: 'Логин пользователя' })
   @IsString()
   username: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Email' })
   @IsEmail()
   @IsOptional()
   email?: string;
 
-  @ApiPropertyOptional()
-  @IsPhoneNumber('RU')
+  @ApiPropertyOptional({ description: 'Телефон' })
+  @IsString()
   @IsOptional()
   phone?: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Пароль (минимум 6 символов)' })
   @IsString()
-  password_hash: string;
+  @MinLength(6)
+  password: string;
+}
+
+export class LoginUserDto {
+  @ApiProperty({ description: 'Логин пользователя' })
+  @IsString()
+  username: string;
+
+  @ApiProperty({ description: 'Пароль' })
+  @IsString()
+  password: string;
 }
 
 export class UpdateUserDto {
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  username?: string;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Email' })
   @IsEmail()
   @IsOptional()
   email?: string;
 
-  @ApiPropertyOptional()
-  @IsPhoneNumber('RU')
+  @ApiPropertyOptional({ description: 'Телефон' })
+  @IsString()
   @IsOptional()
   phone?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Новый пароль (минимум 6 символов)' })
   @IsString()
+  @MinLength(6)
   @IsOptional()
-  password_hash?: string;
+  password?: string;
 }

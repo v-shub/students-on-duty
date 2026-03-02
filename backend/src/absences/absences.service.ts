@@ -1,40 +1,78 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateAbsenceDto } from './dto/absence.dto';
-import { UpdateAbsenceDto } from './dto/absence.dto';
+import { CreateAbsenceDto, UpdateAbsenceDto } from './dto/absence.dto';
 import { Absence } from './entities/absence.entity';
+import { Student } from '../students/entities/student.entity';
 
 @Injectable()
 export class AbsencesService {
   constructor(
     @InjectRepository(Absence)
-    private absencesRepository: Repository<Absence>,
+    private readonly repo: Repository<Absence>,
+    @InjectRepository(Student)
+    private readonly studentRepo: Repository<Student>,
   ) {}
 
-  async create(createAbsenceDto: CreateAbsenceDto): Promise<Absence> {
-    const absence = this.absencesRepository.create(createAbsenceDto);
-    return this.absencesRepository.save(absence);
+  /** Проверить, что студент принадлежит пользователю */
+  private async assertStudentOwner(userId: number, studentId: number): Promise<void> {
+    const student = await this.studentRepo.findOne({ where: { id: studentId } });
+    if (!student) throw new NotFoundException('Студент не найден');
+    if (student.user_id !== userId) throw new ForbiddenException();
   }
 
-  async findAll(query: any): Promise<Absence[]> {
-    return this.absencesRepository.find();
-  }
-
-  async findOne(id: number): Promise<Absence> {
-    const absence = await this.absencesRepository.findOne({ where: { id } });
-    if (!absence) {
-      throw new NotFoundException();
-    }
+  /** Проверить владельца записи об отсутствии */
+  private async assertOwner(userId: number, id: number): Promise<Absence> {
+    const absence = await this.repo.findOne({
+      where: { id },
+      relations: ['student'],
+    });
+    if (!absence) throw new NotFoundException('Запись об отсутствии не найдена');
+    if (absence.student.user_id !== userId) throw new ForbiddenException();
     return absence;
   }
 
-  async update(id: number, updateAbsenceDto: UpdateAbsenceDto): Promise<Absence> {
-    await this.absencesRepository.update(id, updateAbsenceDto);
-    return this.findOne(id);
+  /** Зарегистрировать отсутствие студента */
+  async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
+    await this.assertStudentOwner(userId, dto.student_id);
+    const absence = this.repo.create({
+      student_id: dto.student_id,
+      date_from: dto.date_from as unknown as Date,
+      date_to: dto.date_to as unknown as Date,
+      reason: dto.reason ?? null,
+      is_approved: dto.is_approved ?? false,
+    });
+    return this.repo.save(absence);
   }
 
-  async remove(id: number): Promise<void> {
-    await this.absencesRepository.delete(id);
+  /** Список отсутствий студентов пользователя */
+  async findAll(userId: number, studentId?: number): Promise<Absence[]> {
+    const qb = this.repo
+      .createQueryBuilder('a')
+      .innerJoin('a.student', 's', 's.user_id = :userId', { userId })
+      .addSelect(['s.id', 's.name'])
+      .orderBy('a.date_from', 'DESC');
+    if (studentId) qb.andWhere('a.student_id = :studentId', { studentId });
+    return qb.getMany();
+  }
+
+  async findOne(userId: number, id: number): Promise<Absence> {
+    return this.assertOwner(userId, id);
+  }
+
+  async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
+    const absence = await this.assertOwner(userId, id);
+    Object.assign(absence, {
+      date_from: dto.date_from ?? absence.date_from,
+      date_to: dto.date_to ?? absence.date_to,
+      reason: dto.reason !== undefined ? dto.reason : absence.reason,
+      is_approved: dto.is_approved !== undefined ? dto.is_approved : absence.is_approved,
+    });
+    return this.repo.save(absence);
+  }
+
+  async remove(userId: number, id: number): Promise<void> {
+    await this.assertOwner(userId, id);
+    await this.repo.delete(id);
   }
 }

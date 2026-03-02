@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto, UpdateGroupDto } from './dto/group.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('groups')
+@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@UseGuards(AuthGuard)
 @Controller('groups')
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
@@ -11,15 +15,15 @@ export class GroupsController {
   @ApiOperation({ summary: 'Создать группу' })
   @ApiResponse({ status: 201, description: 'Группа создана' })
   @Post()
-  async create(@Body() createGroupDto: CreateGroupDto) {
-    return this.groupsService.create(createGroupDto);
+  create(@CurrentUser() userId: number, @Body() dto: CreateGroupDto) {
+    return this.groupsService.create(userId, dto);
   }
 
-  @ApiOperation({ summary: 'Получить список групп' })
+  @ApiOperation({ summary: 'Список своих групп' })
   @ApiResponse({ status: 200, description: 'Список групп' })
   @Get()
-  async findAll(@Query() query: any) {
-    return this.groupsService.findAll(query);
+  findAll(@CurrentUser() userId: number) {
+    return this.groupsService.findAll(userId);
   }
 
   @ApiOperation({ summary: 'Получить группу по ID' })
@@ -27,25 +31,24 @@ export class GroupsController {
   @ApiResponse({ status: 200, description: 'Группа найдена' })
   @ApiResponse({ status: 404, description: 'Группа не найдена' })
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.groupsService.findOne(+id);
+  findOne(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.groupsService.findOne(userId, id);
   }
 
   @ApiOperation({ summary: 'Обновить группу' })
   @ApiParam({ name: 'id', description: 'ID группы' })
   @ApiResponse({ status: 200, description: 'Группа обновлена' })
-  @ApiResponse({ status: 404, description: 'Группа не найдена' })
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
-    return this.groupsService.update(+id, updateGroupDto);
+  update(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number, @Body() dto: UpdateGroupDto) {
+    return this.groupsService.update(userId, id, dto);
   }
 
   @ApiOperation({ summary: 'Удалить группу' })
   @ApiParam({ name: 'id', description: 'ID группы' })
-  @ApiResponse({ status: 200, description: 'Группа удалена' })
-  @ApiResponse({ status: 404, description: 'Группа не найдена' })
+  @ApiResponse({ status: 204, description: 'Группа удалена' })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.groupsService.remove(+id);
+  @HttpCode(204)
+  remove(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
+    return this.groupsService.remove(userId, id);
   }
 }

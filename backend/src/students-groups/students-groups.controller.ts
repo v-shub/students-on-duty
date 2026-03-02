@@ -1,59 +1,52 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Param, UseGuards, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiHeader } from '@nestjs/swagger';
 import { StudentsGroupsService } from './students-groups.service';
-import { CreateStudentsGroupDto } from './dto/students-group.dto';
-import { UpdateStudentsGroupDto } from './dto/students-group.dto';
+import { AuthGuard } from '../common/guards/auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@ApiTags('students-groups')
-@Controller('students-groups')
+@ApiTags('groups')
+@ApiHeader({ name: 'X-User-Id', description: 'ID текущего пользователя', required: true })
+@UseGuards(AuthGuard)
+@Controller('groups/:groupId/students')
 export class StudentsGroupsController {
   constructor(private readonly studentsGroupsService: StudentsGroupsService) {}
 
-  @ApiOperation({ summary: 'Привязать студента к группе' })
-  @ApiResponse({ status: 201, description: 'Студент привязан к группе' })
-  @Post()
-  async create(@Body() createStudentsGroupDto: CreateStudentsGroupDto) {
-    return this.studentsGroupsService.create(createStudentsGroupDto);
-  }
-
-  @ApiOperation({ summary: 'Получить список привязок студентов к группам' })
-  @ApiResponse({ status: 200, description: 'Список привязок' })
-  @Get()
-  async findAll(@Query() query: any) {
-    return this.studentsGroupsService.findAll(query);
-  }
-
-  @ApiOperation({ summary: 'Получить привязку студента к группе' })
+  @ApiOperation({ summary: 'Добавить студента в группу' })
   @ApiParam({ name: 'groupId', description: 'ID группы' })
   @ApiParam({ name: 'studentId', description: 'ID студента' })
-  @ApiResponse({ status: 200, description: 'Привязка найдена' })
-  @ApiResponse({ status: 404, description: 'Привязка не найдена' })
-  @Get(':groupId/:studentId')
-  async findOne(@Param('groupId') groupId: string, @Param('studentId') studentId: string) {
-    return this.studentsGroupsService.findOne(+groupId, +studentId);
-  }
-
-  @ApiOperation({ summary: 'Обновить привязку студента к группе' })
-  @ApiParam({ name: 'groupId', description: 'ID группы' })
-  @ApiParam({ name: 'studentId', description: 'ID студента' })
-  @ApiResponse({ status: 200, description: 'Привязка обновлена' })
-  @ApiResponse({ status: 404, description: 'Привязка не найдена' })
-  @Put(':groupId/:studentId')
-  async update(
-    @Param('groupId') groupId: string,
-    @Param('studentId') studentId: string,
-    @Body() updateStudentsGroupDto: UpdateStudentsGroupDto,
+  @ApiResponse({ status: 201, description: 'Студент добавлен в группу' })
+  @ApiResponse({ status: 409, description: 'Студент уже в группе' })
+  @Post(':studentId')
+  addStudent(
+    @CurrentUser() userId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Param('studentId', ParseIntPipe) studentId: number,
   ) {
-    return this.studentsGroupsService.update(+groupId, +studentId, updateStudentsGroupDto);
+    return this.studentsGroupsService.addStudent(userId, groupId, studentId);
+  }
+
+  @ApiOperation({ summary: 'Список студентов группы' })
+  @ApiParam({ name: 'groupId', description: 'ID группы' })
+  @ApiResponse({ status: 200, description: 'Список студентов' })
+  @Get()
+  findStudents(
+    @CurrentUser() userId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+  ) {
+    return this.studentsGroupsService.findStudents(userId, groupId);
   }
 
   @ApiOperation({ summary: 'Удалить студента из группы' })
   @ApiParam({ name: 'groupId', description: 'ID группы' })
   @ApiParam({ name: 'studentId', description: 'ID студента' })
-  @ApiResponse({ status: 200, description: 'Студент удален из группы' })
-  @ApiResponse({ status: 404, description: 'Привязка не найдена' })
-  @Delete(':groupId/:studentId')
-  async remove(@Param('groupId') groupId: string, @Param('studentId') studentId: string) {
-    return this.studentsGroupsService.remove(+groupId, +studentId);
+  @ApiResponse({ status: 204, description: 'Студент удалён из группы' })
+  @Delete(':studentId')
+  @HttpCode(204)
+  removeStudent(
+    @CurrentUser() userId: number,
+    @Param('groupId', ParseIntPipe) groupId: number,
+    @Param('studentId', ParseIntPipe) studentId: number,
+  ) {
+    return this.studentsGroupsService.removeStudent(userId, groupId, studentId);
   }
 }

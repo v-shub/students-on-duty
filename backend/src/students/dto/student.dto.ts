@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import { IsString, IsBoolean, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateStudentDto {
@@ -6,16 +6,10 @@ export class CreateStudentDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ description: 'Активен ли студент', default: true })
+  @ApiPropertyOptional({ description: 'Активен ли студент (участвует в назначениях)', default: true })
   @IsBoolean()
   @IsOptional()
   is_active?: boolean;
-
-  @ApiPropertyOptional({ description: 'Очки дежурств', default: 0 })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  duty_score?: number;
 }
 
 export class UpdateStudentDto {
@@ -28,10 +22,4 @@ export class UpdateStudentDto {
   @IsBoolean()
   @IsOptional()
   is_active?: boolean;
-
-  @ApiPropertyOptional({ description: 'Очки дежурств' })
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  duty_score?: number;
 }

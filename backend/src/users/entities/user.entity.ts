@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Group } from '../../groups/entities/group.entity';
 
 @Entity('users')
 export class User {
@@ -20,7 +21,9 @@ export class User {
   @Column({ length: 50, nullable: true })
   phone: string;
 
-  @ApiProperty()
   @Column({ length: 255 })
   password_hash: string;
+
+  @OneToMany(() => Group, (g) => g.user)
+  groups: Group[];
 }
