@@ -183,6 +183,7 @@ export class DutyEventsService {
    * pending → completed:      +default_score (выполнил)
    * pending → missed:         -default_score (пропустил без уважительной причины)
    * pending → missed_approved: 0             (пропустил, но одобрено)
+   * pending → cancelled:       0             (отменено)
    *
    * Повторная смена статуса откатывает предыдущий score_delta.
    */
@@ -203,7 +204,7 @@ export class DutyEventsService {
       }
 
       let newDelta = 0;
-      const defaultScore = event.schedule.duty_type?.default_score ?? 1;
+      const defaultScore = event.schedule.duty_type.default_score;
 
       if (dto.status === 'completed') {
         newDelta = defaultScore;
@@ -213,6 +214,7 @@ export class DutyEventsService {
         await studentRepo.increment({ id: event.student_id }, 'duty_score', newDelta);
       }
       // missed_approved → newDelta = 0, score не меняется
+      // cancelled       → newDelta = 0, score не меняется
 
       if (dto.status) event.status = dto.status;
       event.score_delta = newDelta;
@@ -220,14 +222,5 @@ export class DutyEventsService {
 
       return eventRepo.save(event);
     });
-  }
-
-  /** Удалить событие (только pending) */
-  async remove(userId: number, id: number): Promise<void> {
-    const event = await this.findOne(userId, id);
-    if (event.status !== 'pending') {
-      throw new BadRequestException('Можно удалить только событие в статусе pending');
-    }
-    await this.eventRepo.delete(id);
   }
 }

@@ -1,7 +1,7 @@
 import { IsInt, IsDateString, IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export const DUTY_STATUSES = ['pending', 'completed', 'missed', 'missed_approved'] as const;
+export const DUTY_STATUSES = ['pending', 'completed', 'missed', 'missed_approved', 'cancelled'] as const;
 export type DutyStatus = (typeof DUTY_STATUSES)[number];
 
 /** DTO для ручной генерации событий дежурства */

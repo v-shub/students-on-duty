@@ -60,14 +60,4 @@ export class DutyEventsController {
   ) {
     return this.dutyEventsService.updateStatus(userId, id, dto);
   }
-
-  @ApiOperation({ summary: 'Удалить событие (только pending)' })
-  @ApiParam({ name: 'id', description: 'ID события' })
-  @ApiResponse({ status: 204, description: 'Событие удалено' })
-  @ApiResponse({ status: 400, description: 'Нельзя удалить завершённое событие' })
-  @Delete(':id')
-  @HttpCode(204)
-  remove(@CurrentUser() userId: number, @Param('id', ParseIntPipe) id: number) {
-    return this.dutyEventsService.remove(userId, id);
-  }
 }

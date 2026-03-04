@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Student } from '../../students/entities/student.entity';
 import { DutySchedule } from '../../duty-schedules/entities/duty-schedule.entity';
 
-export const DUTY_STATUSES = ['pending', 'completed', 'missed', 'missed_approved'] as const;
+export const DUTY_STATUSES = ['pending', 'completed', 'missed', 'missed_approved', 'cancelled'] as const;
 export type DutyStatus = (typeof DUTY_STATUSES)[number];
 
 @Entity('duty_events')
