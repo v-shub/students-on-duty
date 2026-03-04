@@ -1,7 +1,15 @@
+// users/users.controller.ts
 import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto/user.dto';
+import { 
+  RequestCodeDto, 
+  VerifyAndRegisterDto, 
+  VerifyAndLoginDto,
+  AttachContactDto,
+  VerifyAndAttachDto 
+} from './dto/auth.dto';
+import { UpdateUserDto } from './dto/user.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
@@ -10,20 +18,49 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'Регистрация нового старосты' })
-  @ApiResponse({ status: 201, description: 'Пользователь создан' })
-  @ApiResponse({ status: 409, description: 'Логин уже занят' })
-  @Post('register')
-  register(@Body() dto: RegisterUserDto) {
-    return this.usersService.register(dto);
+  @ApiOperation({ summary: 'Запросить код подтверждения для регистрации' })
+  @ApiResponse({ status: 200, description: 'Код отправлен' })
+  @ApiResponse({ status: 409, description: 'Контакт уже зарегистрирован' })
+  @Post('request-code')
+  requestCode(@Body() dto: RequestCodeDto) {
+    return this.usersService.requestCode(dto);
   }
 
-  @ApiOperation({ summary: 'Войти в систему (получить свой ID)' })
-  @ApiResponse({ status: 200, description: 'Успешный вход, возвращает пользователя' })
-  @ApiResponse({ status: 401, description: 'Неверный логин или пароль' })
+  @ApiOperation({ summary: 'Зарегистрироваться с кодом подтверждения' })
+  @ApiResponse({ status: 201, description: 'Пользователь создан' })
+  @ApiResponse({ status: 400, description: 'Неверный код' })
+  @ApiResponse({ status: 409, description: 'Имя пользователя уже занято' })
+  @Post('register')
+  register(@Body() dto: VerifyAndRegisterDto) {
+    return this.usersService.registerWithCode(dto);
+  }
+
+  @ApiOperation({ summary: 'Войти с кодом подтверждения' })
+  @ApiResponse({ status: 200, description: 'Успешный вход' })
+  @ApiResponse({ status: 401, description: 'Неверный код или пользователь не найден' })
   @Post('login')
-  login(@Body() dto: LoginUserDto) {
-    return this.usersService.login(dto);
+  login(@Body() dto: VerifyAndLoginDto) {
+    return this.usersService.loginWithCode(dto);
+  }
+
+  @ApiOperation({ summary: 'Запросить код для привязки нового контакта' })
+  @ApiBearerAuth('bearer')
+  @ApiResponse({ status: 200, description: 'Код отправлен' })
+  @ApiResponse({ status: 409, description: 'Контакт уже используется' })
+  @UseGuards(AuthGuard)
+  @Post('attach/request')
+  requestAttachCode(@CurrentUser() userId: number, @Body() dto: AttachContactDto) {
+    return this.usersService.requestAttachCode(userId, dto);
+  }
+
+  @ApiOperation({ summary: 'Подтвердить и привязать новый контакт' })
+  @ApiBearerAuth('bearer')
+  @ApiResponse({ status: 200, description: 'Контакт привязан' })
+  @ApiResponse({ status: 400, description: 'Неверный код' })
+  @UseGuards(AuthGuard)
+  @Post('attach/verify')
+  verifyAndAttachContact(@CurrentUser() userId: number, @Body() dto: VerifyAndAttachDto) {
+    return this.usersService.verifyAndAttachContact(userId, dto);
   }
 
   @ApiOperation({ summary: 'Получить свой профиль' })

@@ -15,11 +15,13 @@ export class User {
 
   @ApiProperty({ required: false })
   @Column({ length: 255, nullable: true })
-  email: string;
+  @Index({ unique: true })
+  email?: string;
 
   @ApiProperty({ required: false })
   @Column({ length: 50, nullable: true })
-  phone: string;
+  @Index({ unique: true })
+  phone?: string;
 
   @Column({ length: 255 })
   password_hash: string;
