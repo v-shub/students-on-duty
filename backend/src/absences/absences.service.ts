@@ -1,17 +1,20 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, forwardRef, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAbsenceDto, UpdateAbsenceDto } from './dto/absence.dto';
 import { Absence } from './entities/absence.entity';
 import { Student } from '../students/entities/student.entity';
+import { DutyEventsService } from '../duty-events/duty-events.service';
 
 @Injectable()
 export class AbsencesService {
-  constructor(
+    constructor(
     @InjectRepository(Absence)
     private readonly repo: Repository<Absence>,
     @InjectRepository(Student)
     private readonly studentRepo: Repository<Student>,
+    @Inject(forwardRef(() => DutyEventsService))
+    private readonly dutyEventsService: DutyEventsService,
   ) {}
 
   /** Проверить, что студент принадлежит пользователю */
@@ -32,7 +35,10 @@ export class AbsencesService {
     return absence;
   }
 
-  /** Зарегистрировать отсутствие студента */
+    /** Зарегистрировать отсутствие студента.
+   *  После сохранения автоматически переназначает все pending-события
+   *  студента, попадающие в диапазон отсутствия.
+   */
   async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
     await this.assertStudentOwner(userId, dto.student_id);
     const absence = this.repo.create({
@@ -42,7 +48,9 @@ export class AbsencesService {
       reason: dto.reason ?? null,
       is_approved: dto.is_approved ?? false,
     });
-    return this.repo.save(absence);
+    const saved = await this.repo.save(absence);
+    await this.dutyEventsService.handleAbsenceUpsert(saved);
+    return saved;
   }
 
   /** Список отсутствий студентов пользователя */
@@ -60,6 +68,10 @@ export class AbsencesService {
     return this.assertOwner(userId, id);
   }
 
+    /** Обновить запись об отсутствии.
+   *  После сохранения автоматически переназначает pending-события
+   *  студента в новом диапазоне дат.
+   */
   async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
     const absence = await this.assertOwner(userId, id);
     Object.assign(absence, {
@@ -68,7 +80,9 @@ export class AbsencesService {
       reason: dto.reason !== undefined ? dto.reason : absence.reason,
       is_approved: dto.is_approved !== undefined ? dto.is_approved : absence.is_approved,
     });
-    return this.repo.save(absence);
+    const saved = await this.repo.save(absence);
+    await this.dutyEventsService.handleAbsenceUpsert(saved);
+    return saved;
   }
 
   async remove(userId: number, id: number): Promise<void> {

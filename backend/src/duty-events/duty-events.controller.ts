@@ -46,12 +46,15 @@ export class DutyEventsController {
     return this.dutyEventsService.findOne(userId, id);
   }
 
-  @ApiOperation({
+    @ApiOperation({
     summary: 'Обновить статус события',
-    description: 'completed → +score, missed → -score, missed_approved → без изменений score',
+    description:
+      'Доступные статусы: completed (+score) и cancelled (без изменения score). ' +
+      'Статус reassigned выставляется только автоматически при назначении отсутствующего студента.',
   })
   @ApiParam({ name: 'id', description: 'ID события' })
   @ApiResponse({ status: 200, description: 'Статус обновлён, score пересчитан' })
+  @ApiResponse({ status: 400, description: 'Недопустимый переход статуса или событие уже переназначено' })
   @Put(':id/status')
   updateStatus(
     @CurrentUser() userId: number,

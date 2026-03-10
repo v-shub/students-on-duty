@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DutyEventsController } from './duty-events.controller';
 import { DutyEventsService } from './duty-events.service';
@@ -10,6 +10,7 @@ import { StudentsGroup } from '../students-groups/entities/students-group.entity
 import { Absence } from '../absences/entities/absence.entity';
 import { Group } from '../groups/entities/group.entity';
 import { AuthModule } from '../auth/auth.module';
+import { AbsencesModule } from '../absences/absences.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AuthModule } from '../auth/auth.module';
       Group,
     ]),
     AuthModule,
+    forwardRef(() => AbsencesModule),
   ],
   controllers: [DutyEventsController],
   providers: [DutyEventsService],

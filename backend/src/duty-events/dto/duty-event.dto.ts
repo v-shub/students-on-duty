@@ -1,8 +1,8 @@
 import { IsInt, IsDateString, IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { USER_DUTY_STATUSES } from '../entities/duty-event.entity';
 
-export const DUTY_STATUSES = ['pending', 'completed', 'missed', 'missed_approved', 'cancelled'] as const;
-export type DutyStatus = (typeof DUTY_STATUSES)[number];
+export type UserDutyStatus = (typeof USER_DUTY_STATUSES)[number];
 
 /** DTO для ручной генерации событий дежурства */
 export class GenerateDutyEventDto {
@@ -15,15 +15,17 @@ export class GenerateDutyEventDto {
   date: string;
 }
 
-/** DTO для обновления статуса события */
+/** DTO для обновления статуса события пользователем.
+ *  Доступные статусы: completed (выполнено) и cancelled (отменено).
+ *  Статус reassigned выставляется только автоматически системой.
+ */
 export class UpdateDutyEventDto {
-  @ApiPropertyOptional({
-    description: 'Новый статус события',
-    enum: DUTY_STATUSES,
+  @ApiProperty({
+    description: 'Новый статус события. completed — студент выполнил дежурство (+score). cancelled — отменено, score не меняется.',
+    enum: USER_DUTY_STATUSES,
   })
-  @IsIn(DUTY_STATUSES)
-  @IsOptional()
-  status?: DutyStatus;
+  @IsIn(USER_DUTY_STATUSES)
+  status: UserDutyStatus;
 
   @ApiPropertyOptional({ description: 'Заметки' })
   @IsString()
