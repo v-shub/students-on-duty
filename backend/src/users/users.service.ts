@@ -17,6 +17,8 @@ import {
   VerifyAndLoginDto,
   AttachContactDto,
   VerifyAndAttachDto,
+  RefreshTokenDto,
+  LogoutDto,
 } from './dto/auth.dto';
 import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto/user.dto';
 
@@ -45,8 +47,8 @@ export class UsersService {
     return { message: `Код подтверждения отправлен на ${contact}` };
   }
 
-  /** Регистрация с подтверждением */
-  async registerWithCode(dto: VerifyAndRegisterDto): Promise<{ accessToken: string; user: Omit<User, 'password_hash'> }> {
+    /** Регистрация с подтверждением */
+  async registerWithCode(dto: VerifyAndRegisterDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {
     const contact = dto.email || dto.phone;
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
@@ -65,13 +67,14 @@ export class UsersService {
     if (dto.phone) userData.phone = dto.phone;
     const user = this.repo.create(userData);
     const saved = await this.repo.save(user);
-    const accessToken = this.authService.generateToken(saved.id, saved.username);
+        const accessToken = this.authService.generateToken(saved.id, saved.username);
+    const refreshToken = this.authService.generateRefreshToken(saved.id, saved.username);
     const { password_hash: _, ...result } = saved;
-    return { accessToken, user: result };
+    return { accessToken, refreshToken, user: result };
   }
 
   /** Вход по коду */
-  async loginWithCode(dto: VerifyAndLoginDto): Promise<{ accessToken: string; user: Omit<User, 'password_hash'> }> {
+  async loginWithCode(dto: VerifyAndLoginDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {
     const contact = dto.email || dto.phone;
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
@@ -83,9 +86,10 @@ export class UsersService {
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
     }
-    const accessToken = this.authService.generateToken(user.id, user.username);
+        const accessToken = this.authService.generateToken(user.id, user.username);
+    const refreshToken = this.authService.generateRefreshToken(user.id, user.username);
     const { password_hash: _, ...result } = user;
-    return { accessToken, user: result };
+    return { accessToken, refreshToken, user: result };
   }
 
   /** Запрос кода для привязки нового контакта */
@@ -153,15 +157,27 @@ export class UsersService {
     return result;
   }
 
-  /** Логин — возвращает JWT токен и данные пользователя */
-  async login(dto: LoginUserDto): Promise<{ accessToken: string; user: Omit<User, 'password_hash'> }> {
+    /** Логин — возвращает JWT токен и данные пользователя */
+  async login(dto: LoginUserDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {
     const user = await this.repo.findOne({ where: { username: dto.username } });
     if (!user) throw new UnauthorizedException('Неверный логин или пароль');
     const valid = await bcrypt.compare(dto.password, user.password_hash);
     if (!valid) throw new UnauthorizedException('Неверный логин или пароль');
     const accessToken = this.authService.generateToken(user.id, user.username);
+    const refreshToken = this.authService.generateRefreshToken(user.id, user.username);
     const { password_hash: _, ...result } = user;
-    return { accessToken, user: result };
+    return { accessToken, refreshToken, user: result };
+  }
+
+  /** Обновить пару токенов по refresh токену */
+  refreshTokens(dto: RefreshTokenDto): { accessToken: string; refreshToken: string } {
+    return this.authService.refreshAccessToken(dto.refreshToken);
+  }
+
+  /** Выйти — отозвать refresh токен и занести access в blacklist */
+  logout(dto: LogoutDto, accessToken?: string): { message: string } {
+    this.authService.logout(dto.refreshToken, accessToken);
+    return { message: 'Вы успешно вышли из системы' };
   }
 
   /** Получить профиль по ID */

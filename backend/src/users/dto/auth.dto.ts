@@ -74,3 +74,15 @@ export class VerifyAndAttachDto extends AttachContactDto {
   @MinLength(6)
   code: string;
 }
+
+export class RefreshTokenDto {
+  @ApiProperty({ description: 'Refresh токен' })
+  @IsString()
+  refreshToken: string;
+}
+
+export class LogoutDto {
+  @ApiProperty({ description: 'Refresh токен' })
+  @IsString()
+  refreshToken: string;
+}

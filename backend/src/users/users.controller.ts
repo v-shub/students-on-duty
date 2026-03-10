@@ -1,13 +1,15 @@
 // users/users.controller.ts
-import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { 
-  RequestCodeDto, 
-  VerifyAndRegisterDto, 
+import {
+  RequestCodeDto,
+  VerifyAndRegisterDto,
   VerifyAndLoginDto,
   AttachContactDto,
-  VerifyAndAttachDto 
+  VerifyAndAttachDto,
+  RefreshTokenDto,
+  LogoutDto,
 } from './dto/auth.dto';
 import { UpdateUserDto } from './dto/user.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
@@ -35,12 +37,31 @@ export class UsersController {
     return this.usersService.registerWithCode(dto);
   }
 
-  @ApiOperation({ summary: 'Войти с кодом подтверждения' })
+    @ApiOperation({ summary: 'Войти с кодом подтверждения' })
   @ApiResponse({ status: 200, description: 'Успешный вход' })
   @ApiResponse({ status: 401, description: 'Неверный код или пользователь не найден' })
   @Post('login')
   login(@Body() dto: VerifyAndLoginDto) {
     return this.usersService.loginWithCode(dto);
+  }
+
+  @ApiOperation({ summary: 'Обновить access токен по refresh токену' })
+  @ApiResponse({ status: 200, description: 'Новая пара токенов' })
+  @ApiResponse({ status: 401, description: 'Refresh токен недействителен или истёк' })
+  @Post('refresh')
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.usersService.refreshTokens(dto);
+  }
+
+  @ApiOperation({ summary: 'Выйти из системы' })
+  @ApiBearerAuth('bearer')
+  @ApiResponse({ status: 200, description: 'Успешный выход' })
+  @UseGuards(AuthGuard)
+  @Post('logout')
+  logout(@Body() dto: LogoutDto, @Req() req: any) {
+    const authHeader: string = req.headers['authorization'] ?? '';
+    const accessToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+    return this.usersService.logout(dto, accessToken);
   }
 
   @ApiOperation({ summary: 'Запросить код для привязки нового контакта' })
