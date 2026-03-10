@@ -56,13 +56,18 @@ export class DutyEventsService {
     return schedule;
   }
 
-    /**
+      /**
    * Загрузить всех активных студентов группы вместе с их отсутствиями на дату.
-   * Возвращает два списка: доступные (не отсутствуют) и отсутствующие.
+   * Исключает студентов, уже имеющих pending-событие в любом расписании группы на эту дату
+   * (один студент — не более одного дежурства в день).
+   * excludeScheduleId — текущее расписание, исключается из проверки занятости
+   * (чтобы повторная генерация/переназначение не блокировали сами себя).
+   * Возвращает два списка: доступные (не отсутствуют, не заняты) и отсутствующие.
    */
   private async loadStudentsWithAbsences(
     groupId: number,
     dateStr: string,
+    excludeScheduleId?: number,
   ): Promise<{ available: Student[]; absent: Array<{ student: Student; absence: Absence }> }> {
     const links = await this.sgRepo.find({
       where: { group_id: groupId },
@@ -71,6 +76,21 @@ export class DutyEventsService {
     const active = links.map((l) => l.student).filter((s) => s.is_active);
 
     if (active.length === 0) throw new BadRequestException('В группе нет активных студентов');
+
+    // Студенты, уже имеющие pending-событие в любом расписании группы на эту дату
+    const busyEventsQb = this.eventRepo
+      .createQueryBuilder('e')
+      .innerJoin('e.schedule', 's', 's.group_id = :groupId', { groupId })
+      .where('e.duty_date = :date', { date: dateStr })
+      .andWhere('e.status = :status', { status: 'pending' })
+      .andWhere('e.student_id IN (:...ids)', { ids: active.map((s) => s.id) });
+
+    if (excludeScheduleId !== undefined) {
+      busyEventsQb.andWhere('e.schedule_id != :excludeScheduleId', { excludeScheduleId });
+    }
+
+    const busyEvents = await busyEventsQb.getMany();
+    const busyStudentIds = new Set(busyEvents.map((e) => e.student_id));
 
     const absences = await this.absenceRepo
       .createQueryBuilder('a')
@@ -85,6 +105,9 @@ export class DutyEventsService {
     const absent: Array<{ student: Student; absence: Absence }> = [];
 
     for (const student of active) {
+      // Студент уже дежурит сегодня по другому расписанию — пропускаем полностью
+      if (busyStudentIds.has(student.id)) continue;
+
       const absence = absenceByStudentId.get(student.id);
       if (absence) {
         absent.push({ student, absence });
@@ -118,7 +141,7 @@ export class DutyEventsService {
     const eventRepo = manager.getRepository(DutyEvent);
     const studentRepo = manager.getRepository(Student);
 
-    const { available, absent } = await this.loadStudentsWithAbsences(schedule.group_id, dateStr);
+    const { available, absent } = await this.loadStudentsWithAbsences(schedule.group_id, dateStr, schedule.id);
     const defaultScore = schedule.duty_type.default_score;
 
     // Объединяем всех студентов, сортируем по duty_score (наименьший — первый)
@@ -308,21 +331,23 @@ export class DutyEventsService {
           : 'Отсутствие не одобрено — штраф';
         await eventRepo.save(event);
 
-        // Ищем замену: активный студент той же группы, не отсутствующий в эту дату,
-        // ещё не имеющий события в этом расписании на эту дату, с наименьшим duty_score
+                // Ищем замену: активный студент той же группы, не отсутствующий в эту дату,
+        // не имеющий pending-события ни в одном расписании группы на эту дату, с наименьшим duty_score
         const links = await manager.getRepository(StudentsGroup).find({
           where: { group_id: event.schedule.group_id },
           relations: ['student'],
         });
         const activeStudents = links.map((l) => l.student).filter((s) => s.is_active);
 
-        // Студенты уже имеющие событие на эту дату в этом расписании
-        const existingEvents = await eventRepo
+        // Студенты, уже имеющие pending-событие в любом расписании группы на эту дату
+        const busyEvents = await eventRepo
           .createQueryBuilder('e')
-          .where('e.schedule_id = :scheduleId', { scheduleId: event.schedule_id })
-          .andWhere('e.duty_date = :date', { date: dateStr })
+          .innerJoin('e.schedule', 's', 's.group_id = :groupId', { groupId: event.schedule.group_id })
+          .where('e.duty_date = :date', { date: dateStr })
+          .andWhere('e.status = :status', { status: 'pending' })
+          .andWhere('e.student_id IN (:...ids)', { ids: activeStudents.map((s) => s.id) })
           .getMany();
-        const assignedStudentIds = new Set(existingEvents.map((e) => e.student_id));
+        const busyStudentIds = new Set(busyEvents.map((e) => e.student_id));
 
         // Студенты отсутствующие в эту дату
         const absencesOnDate = await manager.getRepository(Absence)
@@ -333,9 +358,9 @@ export class DutyEventsService {
           .getMany();
         const absentIds = new Set(absencesOnDate.map((a) => a.student_id));
 
-        // Кандидаты на замену: не отсутствуют и ещё не назначены на эту дату/расписание
+        // Кандидаты на замену: не отсутствуют и не заняты ни в одном расписании группы на эту дату
         const candidates = activeStudents
-          .filter((s) => !absentIds.has(s.id) && !assignedStudentIds.has(s.id))
+          .filter((s) => !absentIds.has(s.id) && !busyStudentIds.has(s.id))
           .sort((a, b) => a.duty_score - b.duty_score);
 
         if (candidates.length > 0) {
