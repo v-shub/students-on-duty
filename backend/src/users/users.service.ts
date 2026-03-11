@@ -33,19 +33,15 @@ export class UsersService {
 
   /** Запрос кода подтверждения */
   async requestCode(dto: RequestCodeDto): Promise<{ message: string }> {
-    const contact = dto.email || dto.phone;
-    if (!contact) {
-      throw new BadRequestException('Укажите email или телефон');
-    }
-    const existingUser = await this.repo.findOne({
-      where: dto.email ? { email: dto.email } : { phone: dto.phone }
-    });
-    if (existingUser) {
-      throw new ConflictException(`${dto.email ? 'Email' : 'Телефон'} уже зарегистрирован`);
-    }
-    await this.verificationService.generateAndSendCode(contact, dto.email ? 'email' : 'phone');
-    return { message: `Код подтверждения отправлен на ${contact}` };
+  const contact = dto.email || dto.phone;
+  if (!contact) {
+    throw new BadRequestException('Укажите email или телефон');
   }
+
+  // Просто отправляем код, без проверок существования
+  await this.verificationService.generateAndSendCode(contact, dto.email ? 'email' : 'phone');
+  return { message: `Код подтверждения отправлен на ${contact}` };
+}
 
     /** Регистрация с подтверждением */
   async registerWithCode(dto: VerifyAndRegisterDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {

@@ -18,28 +18,37 @@ export class VerificationService {
    * Генерирует и отправляет код подтверждения
    */
   async generateAndSendCode(contact: string, type: 'email' | 'phone'): Promise<void> {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
-    this.codes.set(contact, { code, expiresAt });
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 5 * 60 * 1000;
+  
+  console.log('🔵 Сохраняем код:', {
+    contact,
+    code,
+    expiresAt: new Date(expiresAt).toISOString(),
+    existingCodes: Array.from(this.codes.entries())
+  });
+  
+  this.codes.set(contact, { code, expiresAt });
+  
+  console.log('🟢 После сохранения:', {
+    size: this.codes.size,
+    keys: Array.from(this.codes.keys())
+  });
+}
 
-    // TODO: Здесь отправка кода
-    // Для email: использовать nodemailer, SendGrid и т.д.
-    // Для phone: использовать SMS-шлюз
-    
-    this.logger.log(`Код подтверждения для ${contact}: ${code}`);
-    
-    // Для разработки - выводим в консоль
-    console.log(`\n📱 Код для ${contact}: ${code} (действителен 5 минут)\n`);
+async verifyCode(contact: string, code: string): Promise<boolean> {
+  console.log('🔍 Проверка кода:', {
+    contact,
+    code,
+    storedCode: this.codes.get(contact),
+    allCodes: Array.from(this.codes.entries())
+  });
+  
+  const record = this.codes.get(contact);
+  if (!record) {
+    console.log('❌ Код не найден для контакта:', contact);
+    throw new BadRequestException('Код не найден или истек');
   }
-
-  /**
-   * Проверяет код подтверждения
-   */
-  async verifyCode(contact: string, code: string): Promise<boolean> {
-    const record = this.codes.get(contact);
-    if (!record) {
-      throw new BadRequestException('Код не найден или истек');
-    }
     if (record.expiresAt < Date.now()) {
       this.codes.delete(contact);
       throw new BadRequestException('Код истек');
