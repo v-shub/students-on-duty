@@ -54,16 +54,13 @@ export class UsersService {
     if (existingUser) {
       throw new ConflictException('Имя пользователя уже занято');
     }
-    const password_hash = await bcrypt.hash(dto.password, 10);
-    const userData: Partial<User> = {
-      username: dto.username,
-      password_hash,
-    };
+        const password_hash = await bcrypt.hash(dto.password, 10);
+    const userData: Partial<User> = { username: dto.username, password_hash };
     if (dto.email) userData.email = dto.email;
     if (dto.phone) userData.phone = dto.phone;
-    const user = this.repo.create(userData);
-    const saved = await this.repo.save(user);
-        const accessToken = this.authService.generateToken(saved.id, saved.username);
+    const insertResult = await this.repo.insert(userData);
+    const saved = await this.repo.findOneOrFail({ where: { id: insertResult.identifiers[0].id } });
+    const accessToken = this.authService.generateToken(saved.id, saved.username);
     const refreshToken = this.authService.generateRefreshToken(saved.id, saved.username);
     const { password_hash: _, ...result } = saved;
     return { accessToken, refreshToken, user: result };
@@ -127,30 +124,26 @@ export class UsersService {
     if (existingUser && existingUser.id !== userId) {
       throw new ConflictException(`${dto.email ? 'Email' : 'Телефон'} уже привязан к другому аккаунту`);
     }
-    const user = await this.repo.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('Пользователь не найден');
-    }
-    if (dto.email) {
-      user.email = dto.email;
-    }
-    if (dto.phone) {
-      user.phone = dto.phone;
-    }
-    const saved = await this.repo.save(user);
+        const user = await this.repo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+    const updateData: Partial<User> = {};
+    if (dto.email) updateData.email = dto.email;
+    if (dto.phone) updateData.phone = dto.phone;
+    await this.repo.update(userId, updateData);
+    const saved = await this.repo.findOneOrFail({ where: { id: userId } });
     const { password_hash: _, ...result } = saved;
     return result;
   }
 
   /** Регистрация нового старосты */
-  async register(dto: RegisterUserDto): Promise<Omit<User, 'password_hash'>> {
+    async register(dto: RegisterUserDto): Promise<Omit<User, 'password_hash'>> {
     const exists = await this.repo.findOne({ where: { username: dto.username } });
     if (exists) throw new ConflictException('Пользователь с таким логином уже существует');
     const password_hash = await bcrypt.hash(dto.password, 10);
-    const user = this.repo.create({ username: dto.username, email: dto.email, phone: dto.phone, password_hash });
-    const saved = await this.repo.save(user);
-    const { password_hash: _, ...result } = saved;
-    return result;
+    const result = await this.repo.insert({ username: dto.username, email: dto.email, phone: dto.phone, password_hash });
+    const saved = await this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
+    const { password_hash: _, ...user } = saved;
+    return user;
   }
 
     /** Логин — возвращает JWT токен и данные пользователя */
@@ -185,15 +178,15 @@ export class UsersService {
   }
 
   /** Обновить профиль */
-  async update(id: number, dto: UpdateUserDto): Promise<Omit<User, 'password_hash'>> {
+    async update(id: number, dto: UpdateUserDto): Promise<Omit<User, 'password_hash'>> {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
-    if (dto.password) {
-      user.password_hash = await bcrypt.hash(dto.password, 10);
-    }
-    if (dto.email !== undefined) user.email = dto.email;
-    if (dto.phone !== undefined) user.phone = dto.phone;
-    const saved = await this.repo.save(user);
+    const updateData: Partial<User> = {};
+    if (dto.password) updateData.password_hash = await bcrypt.hash(dto.password, 10);
+    if (dto.email !== undefined) updateData.email = dto.email;
+    if (dto.phone !== undefined) updateData.phone = dto.phone;
+    await this.repo.update(id, updateData);
+    const saved = await this.repo.findOneOrFail({ where: { id } });
     const { password_hash: _, ...result } = saved;
     return result;
   }

@@ -24,9 +24,19 @@ import { AuthModule } from './auth/auth.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DATABASE,
       entities: [__dirname + '/**/entities/*.entity{.ts,.js}'],
-      synchronize: false,
+                  synchronize: false,
       ssl: { rejectUnauthorized: false },
       logging: true,
+      extra: {
+        // Убиваем idle-соединения через 3 сек — раньше чем облачная БД их разрывает
+        idleTimeoutMillis: 3000,
+        max: 10,
+        connectionTimeoutMillis: 5000,
+        // Держим соединения живыми через TCP keepalive
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 1000,
+      },
+      poolSize: 10,
     }),
     AuthModule,
     UsersModule,

@@ -3,13 +3,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AbsencesController } from './absences.controller';
 import { AbsencesService } from './absences.service';
 import { Absence } from './entities/absence.entity';
-import { Student } from '../students/entities/student.entity';
+import { StudentsGroup } from '../students-groups/entities/students-group.entity';
 import { AuthModule } from '../auth/auth.module';
 import { DutyEventsModule } from '../duty-events/duty-events.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Absence, Student]),
+    TypeOrmModule.forFeature([Absence, StudentsGroup]),
     AuthModule,
     forwardRef(() => DutyEventsModule),
   ],

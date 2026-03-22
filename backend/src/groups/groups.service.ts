@@ -12,9 +12,9 @@ export class GroupsService {
   ) {}
 
   /** Создать группу для текущего пользователя */
-  async create(userId: number, dto: CreateGroupDto): Promise<Group> {
-    const group = this.repo.create({ ...dto, user_id: userId });
-    return this.repo.save(group);
+    async create(userId: number, dto: CreateGroupDto): Promise<Group> {
+    const result = await this.repo.insert({ ...dto, user_id: userId });
+    return this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
   }
 
   /** Получить все группы текущего пользователя */
@@ -30,10 +30,10 @@ export class GroupsService {
     return group;
   }
 
-  async update(userId: number, id: number, dto: UpdateGroupDto): Promise<Group> {
-    const group = await this.findOne(userId, id);
-    Object.assign(group, dto);
-    return this.repo.save(group);
+    async update(userId: number, id: number, dto: UpdateGroupDto): Promise<Group> {
+    await this.findOne(userId, id);
+    await this.repo.update(id, dto);
+    return this.repo.findOneOrFail({ where: { id } });
   }
 
   async remove(userId: number, id: number): Promise<void> {

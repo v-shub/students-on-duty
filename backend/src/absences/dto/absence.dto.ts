@@ -26,11 +26,6 @@ export class CreateAbsenceDto {
 }
 
 export class UpdateAbsenceDto {
-  @ApiPropertyOptional({ description: 'ID студента' })
-  @IsInt()
-  @IsOptional()
-  student_id?: number;
-
   @ApiPropertyOptional({ description: 'Дата начала отсутствия (YYYY-MM-DD)' })
   @IsDateString()
   @IsOptional()

@@ -6,22 +6,46 @@ part of 'token_storage.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$tokenStorageHash() => r'c55b482201cf22ebfe8999c77ff19ff449cb49e8';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [tokenStorage].
 @ProviderFor(tokenStorage)
-final tokenStorageProvider = AutoDisposeProvider<TokenStorage>.internal(
-  tokenStorage,
-  name: r'tokenStorageProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$tokenStorageHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final tokenStorageProvider = TokenStorageProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef TokenStorageRef = AutoDisposeProviderRef<TokenStorage>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class TokenStorageProvider
+    extends $FunctionalProvider<TokenStorage, TokenStorage, TokenStorage>
+    with $Provider<TokenStorage> {
+  TokenStorageProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'tokenStorageProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$tokenStorageHash();
+
+  @$internal
+  @override
+  $ProviderElement<TokenStorage> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  TokenStorage create(Ref ref) {
+    return tokenStorage(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TokenStorage value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TokenStorage>(value),
+    );
+  }
+}
+
+String _$tokenStorageHash() => r'a343b29554a438d4c009482b846b166c123898b0';

@@ -18,8 +18,8 @@ export class User {
   @Index({ unique: true })
   email?: string;
 
-  @ApiProperty({ required: false })
-  @Column({ length: 50, nullable: true })
+    @ApiProperty({ required: false })
+  @Column({ type: 'char', length: 11, nullable: true })
   @Index({ unique: true })
   phone?: string;
 

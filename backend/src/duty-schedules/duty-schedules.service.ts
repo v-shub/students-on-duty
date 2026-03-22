@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateDutyScheduleDto, UpdateDutyScheduleDto } from './dto/duty-schedule.dto';
 import { DutySchedule } from './entities/duty-schedule.entity';
 import { DutyDay } from '../duty-days/entities/duty-day.entity';
@@ -28,11 +28,10 @@ export class DutySchedulesService {
     return group;
   }
 
-  /** Проверить, что тип дежурства доступен пользователю (системный или свой) */
-  private async assertDutyTypeAccess(userId: number, dutyTypeId: number): Promise<void> {
+    /** Проверить, что тип дежурства существует */
+  private async assertDutyTypeAccess(dutyTypeId: number): Promise<void> {
     const dt = await this.dutyTypeRepo.findOne({ where: { id: dutyTypeId } });
     if (!dt) throw new NotFoundException('Тип дежурства не найден');
-    if (dt.user_id !== null && dt.user_id !== userId) throw new ForbiddenException();
   }
 
   /** Получить расписание и проверить владельца */
@@ -46,22 +45,28 @@ export class DutySchedulesService {
     return schedule;
   }
 
-  async create(userId: number, dto: CreateDutyScheduleDto): Promise<DutySchedule> {
+    async create(userId: number, dto: CreateDutyScheduleDto): Promise<DutySchedule> {
     await this.assertGroupOwner(userId, dto.group_id);
-    await this.assertDutyTypeAccess(userId, dto.duty_type_id);
+    await this.assertDutyTypeAccess(dto.duty_type_id);
 
-    const schedule = this.repo.create({
+    // Создаём расписание через insert (без предварительного SELECT)
+    const scheduleResult = await this.repo.insert({
       group_id: dto.group_id,
       duty_type_id: dto.duty_type_id,
       students_per_day: dto.students_per_day,
       start_date: dto.start_date as unknown as Date,
       end_date: dto.end_date ? (dto.end_date as unknown as Date) : null,
       is_active: true,
-      // DutyDay создаётся через cascade после сохранения расписания
-      duty_days: this.dutyDayRepo.create({ ...dto.duty_days }),
     });
+    const scheduleId = scheduleResult.identifiers[0].id;
 
-    return this.repo.save(schedule);
+    // Создаём duty_days отдельно
+    await this.dutyDayRepo.insert({ ...dto.duty_days, schedule_id: scheduleId });
+
+    return this.repo.findOneOrFail({
+      where: { id: scheduleId },
+      relations: ['duty_days', 'duty_type', 'group'],
+    });
   }
 
   /** Все расписания пользователя (через его группы) */
@@ -79,19 +84,25 @@ export class DutySchedulesService {
     return this.findOneOwned(userId, id);
   }
 
-  async update(userId: number, id: number, dto: UpdateDutyScheduleDto): Promise<DutySchedule> {
-    const schedule = await this.findOneOwned(userId, id);
+    async update(userId: number, id: number, dto: UpdateDutyScheduleDto): Promise<DutySchedule> {
+    await this.findOneOwned(userId, id);
 
-    if (dto.duty_type_id) await this.assertDutyTypeAccess(userId, dto.duty_type_id);
+    if (dto.duty_type_id) await this.assertDutyTypeAccess(dto.duty_type_id);
 
     const { duty_days, ...rest } = dto;
-    Object.assign(schedule, rest);
 
-    if (duty_days && schedule.duty_days) {
-      Object.assign(schedule.duty_days, duty_days);
+    if (Object.keys(rest).length > 0) {
+      await this.repo.update(id, rest);
     }
 
-    return this.repo.save(schedule);
+    if (duty_days) {
+      await this.dutyDayRepo.update({ schedule_id: id }, duty_days);
+    }
+
+    return this.repo.findOneOrFail({
+      where: { id },
+      relations: ['duty_days', 'duty_type', 'group'],
+    });
   }
 
   async remove(userId: number, id: number): Promise<void> {

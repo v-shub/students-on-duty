@@ -15,7 +15,7 @@ export class Group {
   user_id: number;
 
   @ApiProperty({ description: 'Название группы' })
-  @Column({ length: 255 })
+    @Column({ length: 100 })
   @Index()
   name: string;
 

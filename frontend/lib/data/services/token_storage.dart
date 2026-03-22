@@ -29,4 +29,4 @@ class TokenStorage {
 }
 
 @riverpod
-TokenStorage tokenStorage(TokenStorageRef ref) => TokenStorage();
+TokenStorage tokenStorage(Ref ref) => TokenStorage();

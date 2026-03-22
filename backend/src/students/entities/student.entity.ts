@@ -1,22 +1,17 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../users/entities/user.entity';
 import { StudentsGroup } from '../../students-groups/entities/students-group.entity';
 import { DutyEvent } from '../../duty-events/entities/duty-event.entity';
 import { Absence } from '../../absences/entities/absence.entity';
 
 @Entity('students')
 export class Student {
-  @ApiProperty()
+      @ApiProperty()
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ description: 'ID пользователя-владельца (старосты)' })
-  @Column()
-  user_id: number;
-
-  @ApiProperty({ description: 'Имя студента' })
-  @Column({ length: 255 })
+    @ApiProperty({ description: 'Имя студента' })
+  @Column({ length: 500 })
   @Index()
   name: string;
 
@@ -28,12 +23,7 @@ export class Student {
   @Column({ default: 0 })
   duty_score: number;
 
-  /** Владелец-староста */
-  @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
-  /** Привязки к группам (студент может состоять в нескольких группах одного старосты) */
+    /** Привязки к группам */
   @OneToMany(() => StudentsGroup, (sg) => sg.student)
   group_links: StudentsGroup[];
 

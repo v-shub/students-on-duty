@@ -16,7 +16,10 @@ export class StudentsGroupsService {
     private readonly studentRepo: Repository<Student>,
   ) {}
 
-  /** Проверяет, что группа и студент принадлежат одному пользователю */
+    /**
+   * Проверяет, что группа принадлежит пользователю и студент существует.
+   * Студент не имеет прямого владельца — принадлежность определяется через группы.
+   */
   private async assertOwnership(userId: number, groupId: number, studentId: number): Promise<void> {
     const group = await this.groupRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Группа не найдена');
@@ -24,7 +27,6 @@ export class StudentsGroupsService {
 
     const student = await this.studentRepo.findOne({ where: { id: studentId } });
     if (!student) throw new NotFoundException('Студент не найден');
-    if (student.user_id !== userId) throw new ForbiddenException();
   }
 
   /** Добавить студента в группу */
@@ -32,8 +34,8 @@ export class StudentsGroupsService {
     await this.assertOwnership(userId, groupId, studentId);
     const exists = await this.repo.findOne({ where: { group_id: groupId, student_id: studentId } });
     if (exists) throw new ConflictException('Студент уже в группе');
-    const link = this.repo.create({ group_id: groupId, student_id: studentId });
-    return this.repo.save(link);
+            await this.repo.insert({ group_id: groupId, student_id: studentId });
+    return this.repo.findOneOrFail({ where: { group_id: groupId, student_id: studentId } });
   }
 
   /** Список студентов группы */

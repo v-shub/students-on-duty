@@ -49,8 +49,8 @@ export class DutyEvent {
   @Column('text', { nullable: true })
   notes: string | null;
 
-  @ApiProperty({ description: 'Дата назначения' })
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+    @ApiProperty({ description: 'Дата назначения' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   assigned_at: Date;
 
   @ManyToOne(() => Student, (s) => s.duty_events, { onDelete: 'CASCADE' })

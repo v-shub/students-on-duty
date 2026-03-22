@@ -12,8 +12,10 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
-  @ApiOperation({ summary: 'Создать студента' })
-  @ApiResponse({ status: 201, description: 'Студент создан' })
+      @ApiOperation({ summary: 'Создать студента и добавить в группу' })
+  @ApiResponse({ status: 201, description: 'Студент создан и добавлен в группу' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к группе' })
+  @ApiResponse({ status: 404, description: 'Группа не найдена' })
   @Post()
   create(@CurrentUser() userId: number, @Body() dto: CreateStudentDto) {
     return this.studentsService.create(userId, dto);

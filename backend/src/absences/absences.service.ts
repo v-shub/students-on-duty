@@ -3,35 +3,38 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAbsenceDto, UpdateAbsenceDto } from './dto/absence.dto';
 import { Absence } from './entities/absence.entity';
-import { Student } from '../students/entities/student.entity';
+import { StudentsGroup } from '../students-groups/entities/students-group.entity';
 import { DutyEventsService } from '../duty-events/duty-events.service';
 
 @Injectable()
 export class AbsencesService {
-    constructor(
+      constructor(
     @InjectRepository(Absence)
     private readonly repo: Repository<Absence>,
-    @InjectRepository(Student)
-    private readonly studentRepo: Repository<Student>,
+    @InjectRepository(StudentsGroup)
+    private readonly sgRepo: Repository<StudentsGroup>,
     @Inject(forwardRef(() => DutyEventsService))
     private readonly dutyEventsService: DutyEventsService,
   ) {}
 
-  /** Проверить, что студент принадлежит пользователю */
+  /**
+   * Проверить, что студент принадлежит пользователю.
+   * Принадлежность — студент состоит хотя бы в одной группе пользователя.
+   */
   private async assertStudentOwner(userId: number, studentId: number): Promise<void> {
-    const student = await this.studentRepo.findOne({ where: { id: studentId } });
-    if (!student) throw new NotFoundException('Студент не найден');
-    if (student.user_id !== userId) throw new ForbiddenException();
+    const link = await this.sgRepo
+      .createQueryBuilder('sg')
+      .innerJoin('sg.group', 'g', 'g.user_id = :userId', { userId })
+      .where('sg.student_id = :studentId', { studentId })
+      .getOne();
+    if (!link) throw new ForbiddenException();
   }
 
-  /** Проверить владельца записи об отсутствии */
+  /** Проверить владельца записи об отсутствии через students_groups → group.user_id */
   private async assertOwner(userId: number, id: number): Promise<Absence> {
-    const absence = await this.repo.findOne({
-      where: { id },
-      relations: ['student'],
-    });
+    const absence = await this.repo.findOne({ where: { id } });
     if (!absence) throw new NotFoundException('Запись об отсутствии не найдена');
-    if (absence.student.user_id !== userId) throw new ForbiddenException();
+    await this.assertStudentOwner(userId, absence.student_id);
     return absence;
   }
 
@@ -39,25 +42,27 @@ export class AbsencesService {
    *  После сохранения автоматически переназначает все pending-события
    *  студента, попадающие в диапазон отсутствия.
    */
-  async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
+    async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
     await this.assertStudentOwner(userId, dto.student_id);
-    const absence = this.repo.create({
+    const result = await this.repo.insert({
       student_id: dto.student_id,
       date_from: dto.date_from as unknown as Date,
       date_to: dto.date_to as unknown as Date,
       reason: dto.reason ?? null,
       is_approved: dto.is_approved ?? false,
     });
-    const saved = await this.repo.save(absence);
+    const saved = await this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
     await this.dutyEventsService.handleAbsenceUpsert(saved);
     return saved;
   }
 
-  /** Список отсутствий студентов пользователя */
+    /** Список отсутствий студентов пользователя (через students_groups → group.user_id) */
   async findAll(userId: number, studentId?: number): Promise<Absence[]> {
     const qb = this.repo
       .createQueryBuilder('a')
-      .innerJoin('a.student', 's', 's.user_id = :userId', { userId })
+      .innerJoin('a.student', 's')
+      .innerJoin('s.group_links', 'sg')
+      .innerJoin('sg.group', 'g', 'g.user_id = :userId', { userId })
       .addSelect(['s.id', 's.name'])
       .orderBy('a.date_from', 'DESC');
     if (studentId) qb.andWhere('a.student_id = :studentId', { studentId });
@@ -72,15 +77,15 @@ export class AbsencesService {
    *  После сохранения автоматически переназначает pending-события
    *  студента в новом диапазоне дат.
    */
-  async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
+    async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
     const absence = await this.assertOwner(userId, id);
-    Object.assign(absence, {
+    await this.repo.update(id, {
       date_from: dto.date_from ?? absence.date_from,
       date_to: dto.date_to ?? absence.date_to,
       reason: dto.reason !== undefined ? dto.reason : absence.reason,
       is_approved: dto.is_approved !== undefined ? dto.is_approved : absence.is_approved,
     });
-    const saved = await this.repo.save(absence);
+    const saved = await this.repo.findOneOrFail({ where: { id } });
     await this.dutyEventsService.handleAbsenceUpsert(saved);
     return saved;
   }
