@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/group.dart';
 import 'package:frontend/data/services/api_client.dart';
-import 'package:frontend/presentation/auth/auth_provider.dart';
 import 'package:frontend/presentation/groups/group_detail_screen.dart';
 
 final groupsProvider = FutureProvider<List<Group>>((ref) async {
@@ -18,12 +17,13 @@ class GroupsScreen extends ConsumerWidget {
     final groupsAsync = ref.watch(groupsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Мои группы'),
+            appBar: AppBar(
+        title: const Text('Группы'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.invalidate(groupsProvider),
+            tooltip: 'Обновить',
           ),
         ],
       ),

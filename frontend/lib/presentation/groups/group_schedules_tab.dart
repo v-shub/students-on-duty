@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_day.dart';
 import 'package:frontend/presentation/schedules/schedules_provider.dart';
+import 'package:frontend/presentation/duty/duty_types_provider.dart';
 import 'package:frontend/presentation/schedules/duty_days_provider.dart';
 import 'package:frontend/presentation/schedules/create_schedule_screen.dart';
 import 'package:frontend/presentation/schedules/schedule_events_screen.dart';
@@ -13,6 +14,8 @@ class GroupSchedulesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedulesAsync = ref.watch(groupSchedulesProvider(groupId));
+    final dutyTypesAsync = ref.watch(dutyTypesProvider);
+    final dutyTypes = dutyTypesAsync.value ?? [];
 
     return Scaffold(
       body: schedulesAsync.when(
@@ -44,12 +47,18 @@ class GroupSchedulesTab extends ConsumerWidget {
                     horizontal: 8,
                     vertical: 4,
                   ),
-                  child: ListTile(
-                    title: Text('Расписание #${schedule.id}'),
+                                    child: ListTile(
+                    title: Text(
+                      dutyTypes
+                          .where((t) => t.id == schedule.dutyTypeId)
+                          .map((t) => t.name)
+                          .firstOrNull ??
+                      'Расписание #${schedule.id}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Тип дежурства: ${schedule.dutyTypeId}'),
                         Text(
                           'Студентов в день: ${schedule.studentsPerDay}',
                         ),

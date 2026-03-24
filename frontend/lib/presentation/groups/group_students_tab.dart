@@ -2,65 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/student.dart';
-import 'package:frontend/data/services/api_client.dart';
+import 'package:frontend/presentation/groups/group_students_provider.dart';
 import 'package:frontend/presentation/students/all_students_provider.dart';
-
-/// Провайдер студентов конкретной группы — данные загружаются из API
-class GroupStudentsNotifier extends AsyncNotifier<List<Student>> {
-  final int _groupId;
-
-  GroupStudentsNotifier(this._groupId);
-
-  @override
-  Future<List<Student>> build() async {
-    return await ref.read(apiClientProvider).getGroupStudents(_groupId);
-  }
-
-  /// Перезагрузить список студентов группы из API
-  Future<void> reload() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-      () => ref.read(apiClientProvider).getGroupStudents(_groupId),
-    );
-  }
-
-  /// Добавить существующего студента в группу через API
-  Future<bool> addStudentToGroup(int studentId) async {
-    try {
-      await ref
-          .read(apiClientProvider)
-          .addStudentToGroup(_groupId, studentId);
-      await reload();
-      return true;
-    } catch (e) {
-      debugPrint('Error adding student to group: $e');
-      return false;
-    }
-  }
-
-  /// Удалить студента из группы через API
-  Future<bool> removeStudentFromGroup(int studentId) async {
-    try {
-      await ref
-          .read(apiClientProvider)
-          .removeStudentFromGroup(_groupId, studentId);
-      // Обновляем состояние локально без полной перезагрузки
-      final currentStudents = state.value ?? [];
-      state = AsyncValue.data(
-        currentStudents.where((s) => s.id != studentId).toList(),
-      );
-      return true;
-    } catch (e) {
-      debugPrint('Error removing student from group: $e');
-      return false;
-    }
-  }
-}
-
-final groupStudentsProvider =
-    AsyncNotifierProvider.family<GroupStudentsNotifier, List<Student>, int>(
-      (arg) => GroupStudentsNotifier(arg),
-    );
 
 class GroupStudentsTab extends ConsumerStatefulWidget {
   final int groupId;
@@ -261,87 +204,77 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
 
   // Создание нового студента через API, затем добавление в группу
   void _createNewStudent(BuildContext context) {
-    final nameController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Новый студент'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: nameController,
-            decoration: const InputDecoration(
-              labelText: 'Имя студента',
-              border: OutlineInputBorder(),
-            ),
-            validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Новый студент'),
+      content: Form(
+        key: formKey,
+        child: TextFormField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Имя студента',
+            border: OutlineInputBorder(),
           ),
+          validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final name = nameController.text.trim();
-              Navigator.pop(ctx);
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Отмена'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            if (!formKey.currentState!.validate()) return;
+            final name = nameController.text.trim();
+            Navigator.pop(ctx);
 
-              // Показываем индикатор загрузки
+            // Показываем индикатор загрузки
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Создание студента...'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+
+            // Создаём студента через API
+            final newStudent = await ref
+                .read(allStudentsProvider.notifier)
+                .createStudent(name, groupId: widget.groupId);
+
+            if (!context.mounted) return;
+
+            if (newStudent == null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Создание студента...'),
-                  duration: Duration(seconds: 1),
+                  content: Text('Не удалось создать студента'),
+                  backgroundColor: Colors.red,
                 ),
               );
-
-              // Создаём студента через API
-              final newStudent = await ref
-                  .read(allStudentsProvider.notifier)
-                  .createStudent(name);
-
-              if (newStudent == null) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Не удалось создать студента'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-                return;
-              }
-
-              // Добавляем созданного студента в группу
-              final ok = await ref
+            } else {
+              // Принудительно перезагружаем список студентов группы
+              await ref
                   .read(groupStudentsProvider(widget.groupId).notifier)
-                  .addStudentToGroup(newStudent.id);
-
-              if (!ok && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Студент создан, но не добавлен в группу'),
-                    backgroundColor: Colors.orange,
-                  ),
-                );
-              } else if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Студент успешно добавлен'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: const Text('Создать'),
-          ),
-        ],
-      ),
-    );
-  }
+                  .reload();
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Студент успешно создан и добавлен в группу'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          },
+          child: const Text('Создать'),
+        ),
+      ],
+    ),
+  );
+}
 
   // Диалог выбора существующего студента из общего списка
   void _showExistingStudentsDialog(BuildContext context) {

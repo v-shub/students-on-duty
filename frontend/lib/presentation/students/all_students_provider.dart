@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/student.dart';
-
 import 'package:frontend/data/services/api_client.dart';
+import 'package:frontend/presentation/groups/group_students_provider.dart';
 
 /// Провайдер всех студентов пользователя — загружается из API
 class AllStudentsNotifier extends AsyncNotifier<List<Student>> {
@@ -19,17 +20,33 @@ class AllStudentsNotifier extends AsyncNotifier<List<Student>> {
   }
 
   /// Создать нового студента через API и добавить в список
-  Future<Student?> createStudent(String name, {bool isActive = true}) async {
+  Future<Student?> createStudent(
+    String name, {
+    required int groupId,
+    bool isActive = true,
+  }) async {
     try {
       final student = await ref
           .read(apiClientProvider)
-          .createStudent(name, isActive: isActive);
+          .createStudent(name, groupId: groupId, isActive: isActive);
+      
+      // Обновляем локальный список всех студентов
       state = AsyncValue.data([...state.value ?? [], student]);
+      
+      // Инвалидируем провайдер группы, чтобы он перезагрузил список
+      ref.invalidate(groupStudentsProvider(groupId));
+      
+      // Также принудительно перезагружаем список студентов группы
+      // для немедленного обновления
+      await ref.read(groupStudentsProvider(groupId).notifier).reload();
+      
       return student;
     } catch (e) {
+      debugPrint('Error creating student: $e');
       return null;
     }
   }
+
 
   /// Обновить студента через API
   Future<bool> updateStudent(

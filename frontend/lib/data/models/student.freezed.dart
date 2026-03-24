@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Student {
 
- int get id; String get name;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'duty_score') int get dutyScore;
+@StringToIntConverter() int get id; String get name;@JsonKey(name: 'is_active') bool get isActive;@JsonKey(name: 'duty_score') int get dutyScore;
 /// Create a copy of Student
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $StudentCopyWith<$Res>  {
   factory $StudentCopyWith(Student value, $Res Function(Student) _then) = _$StudentCopyWithImpl;
 @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'duty_score') int dutyScore
+@StringToIntConverter() int id, String name,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'duty_score') int dutyScore
 });
 
 
@@ -156,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@StringToIntConverter()  int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Student() when $default != null:
 return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
@@ -177,7 +177,7 @@ return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@StringToIntConverter()  int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)  $default,) {final _that = this;
 switch (_that) {
 case _Student():
 return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
@@ -197,7 +197,7 @@ return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@StringToIntConverter()  int id,  String name, @JsonKey(name: 'is_active')  bool isActive, @JsonKey(name: 'duty_score')  int dutyScore)?  $default,) {final _that = this;
 switch (_that) {
 case _Student() when $default != null:
 return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
@@ -212,10 +212,10 @@ return $default(_that.id,_that.name,_that.isActive,_that.dutyScore);case _:
 @JsonSerializable()
 
 class _Student implements Student {
-  const _Student({required this.id, required this.name, @JsonKey(name: 'is_active') this.isActive = true, @JsonKey(name: 'duty_score') this.dutyScore = 0});
+  const _Student({@StringToIntConverter() required this.id, required this.name, @JsonKey(name: 'is_active') this.isActive = true, @JsonKey(name: 'duty_score') this.dutyScore = 0});
   factory _Student.fromJson(Map<String, dynamic> json) => _$StudentFromJson(json);
 
-@override final  int id;
+@override@StringToIntConverter() final  int id;
 @override final  String name;
 @override@JsonKey(name: 'is_active') final  bool isActive;
 @override@JsonKey(name: 'duty_score') final  int dutyScore;
@@ -253,7 +253,7 @@ abstract mixin class _$StudentCopyWith<$Res> implements $StudentCopyWith<$Res> {
   factory _$StudentCopyWith(_Student value, $Res Function(_Student) _then) = __$StudentCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'duty_score') int dutyScore
+@StringToIntConverter() int id, String name,@JsonKey(name: 'is_active') bool isActive,@JsonKey(name: 'duty_score') int dutyScore
 });
 
 

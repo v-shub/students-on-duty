@@ -38,14 +38,15 @@ class ApiClient {
   // Для iOS симулятора: 'http://localhost:3000'
 
   ApiClient(this._tokenStorage)
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
-          headers: {'Content-Type': 'application/json'},
-        ),
-      ) {
+      : _dio = Dio(
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+            sendTimeout: const Duration(seconds: 30),
+            headers: {'Content-Type': 'application/json'},
+          ),
+        ) {
     // Логгер для отладки
     _dio.interceptors.add(
       LogInterceptor(
@@ -59,6 +60,8 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(onRequest: _onRequest, onError: _onError),
     );
+    // Retry-интерцептор: повторяет запрос при разрыве соединения с облачной БД
+    _dio.interceptors.add(_RetryInterceptor(_dio));
   }
 
   Future<void> _onRequest(
@@ -137,7 +140,6 @@ class ApiClient {
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
-        // Пользователь уже существует, но код отправлен
         return RequestCodeResponse(
           success: true,
           alreadyExists: true,
@@ -198,7 +200,6 @@ class ApiClient {
     return AuthResponse.fromJson(response.data);
   }
 
-  // Для обратной совместимости (deprecated)
   @Deprecated('Use loginWithCode or loginWithPassword instead')
   Future<AuthResponse> login({
     String? email,
@@ -268,10 +269,14 @@ class ApiClient {
 
   // ==================== СТУДЕНТЫ ====================
   
-  Future<Student> createStudent(String name, {bool isActive = true}) async {
+  Future<Student> createStudent(
+    String name, {
+    required int groupId,
+    bool isActive = true,
+  }) async {
     final response = await _dio.post(
       '/students',
-      data: {'name': name, 'is_active': isActive},
+      data: {'name': name, 'group_id': groupId, 'is_active': isActive},
     );
     return Student.fromJson(response.data);
   }
@@ -446,26 +451,57 @@ class ApiClient {
     int scheduleId,
     DateTime date,
   ) async {
-    final response = await _dio.post(
-      '/duty-events/generate',
-      data: {
-        'schedule_id': scheduleId,
-        'date': date.toIso8601String().split('T').first,
-      },
-    );
-    return (response.data as List)
-        .map((json) => DutyEvent.fromJson(json))
-        .toList();
+    print('=== ApiClient.generateDutyEvents() ===');
+    print('Schedule ID: $scheduleId');
+    print('Date: ${date.toIso8601String().split('T').first}');
+    
+    try {
+      final response = await _dio.post(
+        '/duty-events/generate',
+        data: {
+          'schedule_id': scheduleId,
+          'date': date.toIso8601String().split('T').first,
+        },
+      );
+      
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      
+      final events = (response.data as List)
+          .map((json) => DutyEvent.fromJson(json))
+          .toList();
+      
+      print('Parsed ${events.length} events');
+      return events;
+    } catch (e) {
+      print('Error in generateDutyEvents: $e');
+      rethrow;
+    }
   }
 
   Future<List<DutyEvent>> getDutyEvents({int? scheduleId}) async {
-    final response = await _dio.get(
-      '/duty-events',
-      queryParameters: scheduleId != null ? {'schedule_id': scheduleId} : null,
-    );
-    return (response.data as List)
-        .map((json) => DutyEvent.fromJson(json))
-        .toList();
+    print('=== ApiClient.getDutyEvents() ===');
+    print('Schedule ID filter: $scheduleId');
+    
+    try {
+      final response = await _dio.get(
+        '/duty-events',
+        queryParameters: scheduleId != null ? {'schedule_id': scheduleId} : null,
+      );
+      
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      
+      final events = (response.data as List)
+          .map((json) => DutyEvent.fromJson(json))
+          .toList();
+      
+      print('Parsed ${events.length} events');
+      return events;
+    } catch (e) {
+      print('Error in getDutyEvents: $e');
+      rethrow;
+    }
   }
 
   Future<DutyEvent> getDutyEvent(int id) async {
@@ -478,39 +514,143 @@ class ApiClient {
     DutyEventStatus status, {
     String? notes,
   }) async {
+    print('=== ApiClient.updateDutyEventStatus() ===');
+    print('Event ID: $id');
+    print('Status: ${status.name}');
+    print('Notes: $notes');
+    
     final response = await _dio.put(
       '/duty-events/$id/status',
       data: {'status': status.name, if (notes != null) 'notes': notes},
     );
+    
+    print('Response: ${response.data}');
     return DutyEvent.fromJson(response.data);
   }
 
   // ==================== СВЯЗИ СТУДЕНТ-ГРУППА ====================
   
-Future<void> addStudentToGroup(int groupId, int studentId) async {
-  await _dio.post('/groups/$groupId/students/$studentId');
-}
-
-Future<List<Student>> getGroupStudents(int groupId) async {
-  final response = await _dio.get('/groups/$groupId/students');
-  
-  // Сервер возвращает список StudentsGroup объектов
-  // Каждый объект содержит поле 'student' с данными студента
-  final List<dynamic> data = response.data;
-  final List<Student> students = [];
-  
-  for (var item in data) {
-    if (item is Map && item.containsKey('student')) {
-      final studentJson = item['student'] as Map<String, dynamic>;
-      students.add(Student.fromJson(studentJson));
-    }
+  Future<void> addStudentToGroup(int groupId, int studentId) async {
+    await _dio.post('/groups/$groupId/students/$studentId');
   }
-  
-  return students;
+
+  Future<List<Student>> getGroupStudents(int groupId) async {
+    print('=== ApiClient.getGroupStudents() ===');
+    print('Group ID: $groupId');
+    
+    final response = await _dio.get('/groups/$groupId/students');
+    
+    // Сервер возвращает список StudentsGroup объектов
+    // Каждый объект содержит поле 'student' с данными студента
+    final List<dynamic> data = response.data;
+    final List<Student> students = [];
+    
+    for (var item in data) {
+      if (item is Map && item.containsKey('student')) {
+        final studentJson = item['student'] as Map<String, dynamic>;
+        students.add(Student.fromJson(studentJson));
+      }
+    }
+    
+    print('Found ${students.length} students in group $groupId');
+    for (var student in students) {
+      print('  - Student: ${student.id} - ${student.name}');
+    }
+    
+    return students;
+  }
+
+  Future<void> removeStudentFromGroup(int groupId, int studentId) async {
+    await _dio.delete('/groups/$groupId/students/$studentId');
+  }
 }
 
-Future<void> removeStudentFromGroup(int groupId, int studentId) async {
-  await _dio.delete('/groups/$groupId/students/$studentId');
+/// Retry-интерцептор для повторных запросов при разрыве соединения с облачной БД.
+/// Облачные БД (Supabase/Neon/Railway) иногда разрывают idle-соединения,
+/// сервер отвечает 500 с "Connection terminated unexpectedly".
+/// При повторном запросе пул берёт свежее соединение — всё работает.
+class _RetryInterceptor extends Interceptor {
+  final Dio dio;
+
+  /// Максимальное количество повторных попыток
+  static const int _maxRetries = 5;
+
+  /// Задержка между попытками (нарастающая: 500ms, 1000ms, 1500ms...)
+  static const Duration _baseRetryDelay = Duration(milliseconds: 500);
+
+  _RetryInterceptor(this.dio);
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final statusCode = err.response?.statusCode;
+    final responseBody = err.response?.data?.toString() ?? '';
+    final errorMessage = err.message ?? '';
+    final errorType = err.type;
+
+    // Логируем ошибку для отладки
+    print('=== RetryInterceptor.onError ===');
+    print('Error type: $errorType');
+    print('Status code: $statusCode');
+    print('Message: ${err.message}');
+    print('Response body: ${responseBody.substring(0, responseBody.length > 200 ? 200 : responseBody.length)}');
+
+    // Расширяем условия для повторных попыток
+    final isConnectionTerminated = 
+        (statusCode == 500 || statusCode == 503) &&
+        (responseBody.contains('Connection terminated') ||
+         responseBody.contains('connection terminated') ||
+         responseBody.contains('Connection reset') ||
+         responseBody.contains('timeout') ||
+         responseBody.contains('time out') ||
+         responseBody.contains('unexpectedly'));
+    
+    final isNetworkError = 
+        errorType == DioExceptionType.connectionError ||
+        errorType == DioExceptionType.receiveTimeout ||
+        errorType == DioExceptionType.connectionTimeout ||
+        errorType == DioExceptionType.sendTimeout;
+    
+    final isServerError = statusCode != null && statusCode >= 500;
+    
+    // Добавляем проверку на сообщение об ошибке
+    final isConnectionError = errorMessage.toLowerCase().contains('connection') ||
+                              errorMessage.toLowerCase().contains('terminated') ||
+                              errorMessage.toLowerCase().contains('reset') ||
+                              errorMessage.toLowerCase().contains('timeout');
+
+    // Повторяем запрос при любых признаках проблем с соединением
+    final shouldRetry = isConnectionTerminated || isNetworkError || isServerError || isConnectionError;
+
+    if (!shouldRetry) {
+      print('Not retrying - error not eligible for retry');
+      return handler.next(err);
+    }
+
+    final attempt = (err.requestOptions.extra['_retryCount'] as int?) ?? 0;
+    print('Retry attempt: $attempt/$_maxRetries');
+    
+    if (attempt >= _maxRetries) {
+      print('Max retries reached, giving up');
+      return handler.next(err);
+    }
+
+    // Увеличиваем счётчик попыток
+    err.requestOptions.extra['_retryCount'] = attempt + 1;
+
+    // Нарастающая задержка перед повтором
+    final delay = _baseRetryDelay * (attempt + 1);
+    print('Waiting ${delay.inMilliseconds}ms before retry...');
+    await Future.delayed(delay);
+
+    try {
+      print('Retrying request: ${err.requestOptions.method} ${err.requestOptions.path}');
+      final response = await dio.fetch(err.requestOptions);
+      print('Retry successful!');
+      return handler.resolve(response);
+    } on DioException catch (e) {
+      print('Retry failed: ${e.message}');
+      return handler.next(e);
+    }
   }
 }
 

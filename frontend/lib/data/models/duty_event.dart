@@ -3,7 +3,16 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'duty_event.freezed.dart';
 part 'duty_event.g.dart';
 
-enum DutyEventStatus { pending, completed, cancelled, reassigned }
+enum DutyEventStatus {
+  @JsonValue('pending')
+  pending,
+  @JsonValue('completed')
+  completed,
+  @JsonValue('cancelled')
+  cancelled,
+  @JsonValue('reassigned')
+  reassigned,
+}
 
 @freezed
 abstract class DutyEvent with _$DutyEvent {

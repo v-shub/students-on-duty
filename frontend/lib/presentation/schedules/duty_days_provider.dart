@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_day.dart';
+import 'package:frontend/data/models/dto/create_duty_day_dto.dart';
 import 'package:frontend/data/models/dto/update_duty_day_dto.dart';
 import 'package:frontend/data/services/api_client.dart';
 
@@ -21,22 +22,41 @@ class DutyDayNotifier extends AsyncNotifier<DutyDay?> {
     }
   }
 
-  /// Обновить дни через API
+    /// Сохранить дни через API: PUT если уже существуют, POST если нет
   Future<bool> updateDays(DutyDay days) async {
     try {
-      final dto = UpdateDutyDayDto(
-        isMonday: days.isMonday,
-        isTuesday: days.isTuesday,
-        isWednesday: days.isWednesday,
-        isThursday: days.isThursday,
-        isFriday: days.isFriday,
-        isSaturday: days.isSaturday,
-        isSunday: days.isSunday,
-      );
-      final updated = await ref
-          .read(apiClientProvider)
-          .updateDutyDay(_scheduleId, dto);
-      state = AsyncValue.data(updated);
+      final DutyDay result;
+      if (state.value != null) {
+        // Запись уже существует — обновляем через PUT
+        final dto = UpdateDutyDayDto(
+          isMonday: days.isMonday,
+          isTuesday: days.isTuesday,
+          isWednesday: days.isWednesday,
+          isThursday: days.isThursday,
+          isFriday: days.isFriday,
+          isSaturday: days.isSaturday,
+          isSunday: days.isSunday,
+        );
+        result = await ref
+            .read(apiClientProvider)
+            .updateDutyDay(_scheduleId, dto);
+      } else {
+        // Запись отсутствует — создаём через POST
+        final dto = CreateDutyDayDto(
+          scheduleId: _scheduleId,
+          isMonday: days.isMonday,
+          isTuesday: days.isTuesday,
+          isWednesday: days.isWednesday,
+          isThursday: days.isThursday,
+          isFriday: days.isFriday,
+          isSaturday: days.isSaturday,
+          isSunday: days.isSunday,
+        );
+        result = await ref
+            .read(apiClientProvider)
+            .createDutyDay(dto);
+      }
+      state = AsyncValue.data(result);
       return true;
     } catch (e) {
       return false;
