@@ -4,7 +4,7 @@ part 'create_group_dto.freezed.dart';
 part 'create_group_dto.g.dart';
 
 @freezed
-class CreateGroupDto with _$CreateGroupDto {
+abstract class CreateGroupDto with _$CreateGroupDto {
   const factory CreateGroupDto({required String name, String? description}) =
       _CreateGroupDto;
 

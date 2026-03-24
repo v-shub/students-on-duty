@@ -12,18 +12,33 @@ class GroupSchedulesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedules = ref.watch(groupSchedulesProvider(groupId));
-    final dutyDays = ref.watch(dutyDaysProvider);
+    final schedulesAsync = ref.watch(groupSchedulesProvider(groupId));
 
     return Scaffold(
-      body: schedules.isEmpty
-          ? const Center(child: Text('Нет расписаний для этой группы'))
-          : ListView.builder(
+      body: schedulesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) =>
+            Center(child: Text('Ошибка загрузки расписаний: $e')),
+        data: (schedules) {
+          if (schedules.isEmpty) {
+            return const Center(
+              child: Text('Нет расписаний для этой группы'),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () => ref
+                .read(groupSchedulesProvider(groupId).notifier)
+                .reload(),
+            child: ListView.builder(
               itemCount: schedules.length,
               itemBuilder: (ctx, i) {
                 final schedule = schedules[i];
-                final days =
-                    dutyDays[schedule.id] ?? DutyDay(scheduleId: schedule.id);
+                // Загружаем дни дежурств для этого расписания из API
+                final daysAsync =
+                    ref.watch(dutyDayProvider(schedule.id));
+                final days = daysAsync.value ??
+                    DutyDay(scheduleId: schedule.id);
+
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -35,9 +50,13 @@ class GroupSchedulesTab extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Тип дежурства: ${schedule.dutyTypeId}'),
-                        Text('Студентов в день: ${schedule.studentsPerDay}'),
                         Text(
-                          'Период: ${_formatDate(schedule.startDate)} - ${schedule.endDate != null ? _formatDate(schedule.endDate!) : '∞'}',
+                          'Студентов в день: ${schedule.studentsPerDay}',
+                        ),
+                        Text(
+                          'Период: ${_formatDate(schedule.startDate)}'
+                          ' - '
+                          '${schedule.endDate != null ? _formatDate(schedule.endDate!) : '∞'}',
                         ),
                         Text('Дни: ${_formatDays(days)}'),
                       ],
@@ -46,12 +65,6 @@ class GroupSchedulesTab extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            // TODO: редактирование расписания
-                          },
-                        ),
-                        IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () =>
                               _deleteSchedule(context, ref, schedule.id),
@@ -59,7 +72,6 @@ class GroupSchedulesTab extends ConsumerWidget {
                       ],
                     ),
                     onTap: () {
-                      // Передаём всё расписание, а не только ID
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -72,6 +84,9 @@ class GroupSchedulesTab extends ConsumerWidget {
                 );
               },
             ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -79,7 +94,11 @@ class GroupSchedulesTab extends ConsumerWidget {
             MaterialPageRoute(
               builder: (_) => CreateScheduleScreen(groupId: groupId),
             ),
-          ).then((_) => ref.invalidate(groupSchedulesProvider(groupId)));
+          ).then(
+            (_) => ref
+                .read(groupSchedulesProvider(groupId).notifier)
+                .reload(),
+          );
         },
         child: const Icon(Icons.add),
       ),
@@ -100,7 +119,7 @@ class GroupSchedulesTab extends ConsumerWidget {
     return active.isEmpty ? 'не указаны' : active.join(', ');
   }
 
-  void _deleteSchedule(
+    void _deleteSchedule(
     BuildContext context,
     WidgetRef ref,
     int scheduleId,
@@ -124,8 +143,15 @@ class GroupSchedulesTab extends ConsumerWidget {
       ),
     );
     if (confirm != true) return;
-    await ref
+
+    final ok = await ref
         .read(groupSchedulesProvider(groupId).notifier)
         .deleteSchedule(scheduleId);
+
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось удалить расписание')),
+      );
+    }
   }
 }

@@ -93,7 +93,7 @@ class GroupsScreen extends ConsumerWidget {
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Отмена'),
           ),
-          ElevatedButton(
+                    ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) return;
@@ -110,9 +110,11 @@ class GroupsScreen extends ConsumerWidget {
                 // Обновляем список групп
                 ref.invalidate(groupsProvider);
               } catch (e) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+                }
               }
             },
             child: const Text('Создать'),

@@ -6,15 +6,14 @@ part of 'create_group_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CreateGroupDtoImpl _$$CreateGroupDtoImplFromJson(Map<String, dynamic> json) =>
-    _$CreateGroupDtoImpl(
+_CreateGroupDto _$CreateGroupDtoFromJson(Map<String, dynamic> json) =>
+    _CreateGroupDto(
       name: json['name'] as String,
       description: json['description'] as String?,
     );
 
-Map<String, dynamic> _$$CreateGroupDtoImplToJson(
-  _$CreateGroupDtoImpl instance,
-) => <String, dynamic>{
-  'name': instance.name,
-  'description': instance.description,
-};
+Map<String, dynamic> _$CreateGroupDtoToJson(_CreateGroupDto instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'description': instance.description,
+    };

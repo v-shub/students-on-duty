@@ -4,11 +4,10 @@ part 'group.freezed.dart';
 part 'group.g.dart';
 
 @freezed
-class Group with _$Group {
+abstract class Group with _$Group {
   const factory Group({
     required int id,
-    int?
-    userId, // опционально, так как сервер может не возвращать или быть null
+    @JsonKey(name: 'user_id') int? userId,
     required String name,
     String? description,
   }) = _Group;

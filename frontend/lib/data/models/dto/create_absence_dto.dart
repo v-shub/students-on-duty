@@ -4,13 +4,13 @@ part 'create_absence_dto.freezed.dart';
 part 'create_absence_dto.g.dart';
 
 @freezed
-class CreateAbsenceDto with _$CreateAbsenceDto {
-  const factory CreateAbsenceDto({
-    required int studentId,
-    required String dateFrom,
-    required String dateTo,
+abstract class CreateAbsenceDto with _$CreateAbsenceDto {
+    const factory CreateAbsenceDto({
+    @JsonKey(name: 'student_id') required int studentId,
+    @JsonKey(name: 'date_from') required String dateFrom,
+    @JsonKey(name: 'date_to') required String dateTo,
     String? reason,
-    bool? isApproved,
+    @JsonKey(name: 'is_approved') bool? isApproved,
   }) = _CreateAbsenceDto;
 
   factory CreateAbsenceDto.fromJson(Map<String, dynamic> json) =>

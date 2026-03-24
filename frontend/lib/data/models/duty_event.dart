@@ -6,16 +6,16 @@ part 'duty_event.g.dart';
 enum DutyEventStatus { pending, completed, cancelled, reassigned }
 
 @freezed
-class DutyEvent with _$DutyEvent {
+abstract class DutyEvent with _$DutyEvent {
   const factory DutyEvent({
     required int id,
-    required int studentId,
-    required int scheduleId,
-    required DateTime dutyDate,
+    @JsonKey(name: 'student_id') required int studentId,
+    @JsonKey(name: 'schedule_id') required int scheduleId,
+    @JsonKey(name: 'duty_date') required DateTime dutyDate,
     required DutyEventStatus status,
-    int? scoreEarned,
+    @JsonKey(name: 'score_earned') int? scoreEarned,
     String? notes,
-    DateTime? assignedAt,
+    @JsonKey(name: 'assigned_at') DateTime? assignedAt,
   }) = _DutyEvent;
 
   factory DutyEvent.fromJson(Map<String, dynamic> json) =>

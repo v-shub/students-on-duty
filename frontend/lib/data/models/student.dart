@@ -4,12 +4,12 @@ part 'student.freezed.dart';
 part 'student.g.dart';
 
 @freezed
-class Student with _$Student {
+abstract class Student with _$Student {
   const factory Student({
     required int id,
     required String name,
-    @Default(true) bool isActive,
-    @Default(0) int dutyScore,
+    @JsonKey(name: 'is_active') @Default(true) bool isActive,
+    @JsonKey(name: 'duty_score') @Default(0) int dutyScore,
   }) = _Student;
 
   factory Student.fromJson(Map<String, dynamic> json) =>

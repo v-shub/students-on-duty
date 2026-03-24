@@ -6,18 +6,16 @@ part of 'create_duty_type_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CreateDutyTypeDtoImpl _$$CreateDutyTypeDtoImplFromJson(
-  Map<String, dynamic> json,
-) => _$CreateDutyTypeDtoImpl(
-  name: json['name'] as String,
-  description: json['description'] as String?,
-  defaultScore: (json['defaultScore'] as num).toInt(),
-);
+_CreateDutyTypeDto _$CreateDutyTypeDtoFromJson(Map<String, dynamic> json) =>
+    _CreateDutyTypeDto(
+      name: json['name'] as String,
+      description: json['description'] as String?,
+      defaultScore: (json['default_score'] as num).toInt(),
+    );
 
-Map<String, dynamic> _$$CreateDutyTypeDtoImplToJson(
-  _$CreateDutyTypeDtoImpl instance,
-) => <String, dynamic>{
-  'name': instance.name,
-  'description': instance.description,
-  'defaultScore': instance.defaultScore,
-};
+Map<String, dynamic> _$CreateDutyTypeDtoToJson(_CreateDutyTypeDto instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'description': instance.description,
+      'default_score': instance.defaultScore,
+    };

@@ -2,15 +2,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/student.dart';
+import 'package:frontend/data/services/api_client.dart';
 import 'package:frontend/presentation/students/all_students_provider.dart';
 
-// Провайдер для студентов конкретной группы (изначально пустой, будем управлять локально)
-final groupStudentsProvider = StateProvider.family<List<Student>, int>((
-  ref,
-  groupId,
-) {
-  return [];
-});
+/// Провайдер студентов конкретной группы — данные загружаются из API
+class GroupStudentsNotifier extends AsyncNotifier<List<Student>> {
+  final int _groupId;
+
+  GroupStudentsNotifier(this._groupId);
+
+  @override
+  Future<List<Student>> build() async {
+    return await ref.read(apiClientProvider).getGroupStudents(_groupId);
+  }
+
+  /// Перезагрузить список студентов группы из API
+  Future<void> reload() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(apiClientProvider).getGroupStudents(_groupId),
+    );
+  }
+
+  /// Добавить существующего студента в группу через API
+  Future<bool> addStudentToGroup(int studentId) async {
+    try {
+      await ref
+          .read(apiClientProvider)
+          .addStudentToGroup(_groupId, studentId);
+      await reload();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Удалить студента из группы через API
+  Future<bool> removeStudentFromGroup(int studentId) async {
+    try {
+      await ref
+          .read(apiClientProvider)
+          .removeStudentFromGroup(_groupId, studentId);
+      state = AsyncValue.data(
+        (state.value ?? []).where((s) => s.id != studentId).toList(),
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+final groupStudentsProvider =
+    AsyncNotifierProvider.family<GroupStudentsNotifier, List<Student>, int>(
+      (arg) => GroupStudentsNotifier(arg),
+    );
 
 class GroupStudentsTab extends ConsumerStatefulWidget {
   final int groupId;
@@ -22,43 +68,30 @@ class GroupStudentsTab extends ConsumerStatefulWidget {
 
 class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
   final _searchController = TextEditingController();
-  List<Student> _filteredStudents = [];
 
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_filterStudents);
+    _searchController.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterStudents);
+    _searchController.removeListener(() => setState(() {}));
     _searchController.dispose();
     super.dispose();
   }
 
-  void _filterStudents() {
-    final groupStudents = ref.read(groupStudentsProvider(widget.groupId));
+  List<Student> _applyFilter(List<Student> students) {
     final query = _searchController.text.toLowerCase();
-    if (query.isEmpty) {
-      _filteredStudents = List.from(groupStudents);
-    } else {
-      _filteredStudents = groupStudents
-          .where((s) => s.name.toLowerCase().contains(query))
-          .toList();
-    }
-    setState(() {});
+    if (query.isEmpty) return students;
+    return students.where((s) => s.name.toLowerCase().contains(query)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final groupStudents = ref.watch(groupStudentsProvider(widget.groupId));
-    final allStudents = ref.watch(allStudentsProvider);
-
-    // Если фильтрованный список не синхронизирован, обновляем его
-    if (_filteredStudents.isEmpty && groupStudents.isNotEmpty) {
-      _filteredStudents = List.from(groupStudents);
-    }
+    final groupStudentsAsync =
+        ref.watch(groupStudentsProvider(widget.groupId));
 
     return Scaffold(
       body: Column(
@@ -77,48 +110,60 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
             ),
           ),
           Expanded(
-            child: _filteredStudents.isEmpty
-                ? const Center(child: Text('Нет студентов в группе'))
-                : RefreshIndicator(
-                    onRefresh: () async {
-                      // При "обновлении" просто сбрасываем фильтр
-                      _searchController.clear();
+            child: groupStudentsAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  Center(child: Text('Ошибка загрузки студентов: $e')),
+              data: (students) {
+                final filtered = _applyFilter(students);
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('Нет студентов в группе'));
+                }
+                return RefreshIndicator(
+                  onRefresh: () => ref
+                      .read(groupStudentsProvider(widget.groupId).notifier)
+                      .reload(),
+                  child: ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (ctx, i) {
+                      final student = filtered[i];
+                      return ListTile(
+                        title: Text(student.name),
+                        subtitle: Text(
+                          'Очки: ${student.dutyScore}'
+                          '${!student.isActive ? ' (неактивен)' : ''}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: Colors.blue,
+                              ),
+                              onPressed: () =>
+                                  _editStudent(context, student),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.remove_circle,
+                                color: Colors.red,
+                              ),
+                              onPressed: () =>
+                                  _removeStudentFromGroup(
+                                    context,
+                                    student.id,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      );
                     },
-                    child: ListView.builder(
-                      itemCount: _filteredStudents.length,
-                      itemBuilder: (ctx, i) {
-                        final student = _filteredStudents[i];
-                        return ListTile(
-                          title: Text(student.name),
-                          subtitle: Text(
-                            'Очки: ${student.dutyScore} ${!student.isActive ? '(неактивен)' : ''}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.blue,
-                                ),
-                                onPressed: () => _editStudent(context, student),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.remove_circle,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => _removeStudentFromGroup(
-                                  context,
-                                  student.id,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -158,10 +203,9 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-  // Создание нового студента
+    // Создание нового студента через API, затем добавление в группу
   void _createNewStudent(BuildContext context) {
     final nameController = TextEditingController();
-    final isActive = true;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -173,7 +217,8 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
           child: TextFormField(
             controller: nameController,
             decoration: const InputDecoration(labelText: 'Имя студента'),
-            validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
+            validator: (v) =>
+                v == null || v.isEmpty ? 'Введите имя' : null,
           ),
         ),
         actions: [
@@ -182,36 +227,39 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
             child: const Text('Отмена'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               final name = nameController.text.trim();
-
-              // Генерируем новый ID (в реальном приложении его даст сервер)
-              final allStudents = ref.read(allStudentsProvider.notifier);
-              final newId =
-                  (ref
-                      .read(allStudentsProvider)
-                      .map((s) => s.id)
-                      .fold(0, (max, id) => id > max ? id : max)) +
-                  1;
-
-              final newStudent = Student(
-                id: newId,
-                name: name,
-                isActive: isActive,
-                dutyScore: 0,
-              );
-
-              // Добавляем в общий список
-              allStudents.addStudent(newStudent);
-
-              // Добавляем в группу
-              ref
-                  .read(groupStudentsProvider(widget.groupId).notifier)
-                  .update((state) => [...state, newStudent]);
-
               Navigator.pop(ctx);
-              _filterStudents(); // обновить поиск
+
+              // Создаём студента через API
+              final newStudent = await ref
+                  .read(allStudentsProvider.notifier)
+                  .createStudent(name);
+
+              if (newStudent == null) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Не удалось создать студента'),
+                    ),
+                  );
+                }
+                return;
+              }
+
+              // Добавляем созданного студента в группу
+              final ok = await ref
+                  .read(groupStudentsProvider(widget.groupId).notifier)
+                  .addStudentToGroup(newStudent.id);
+
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Студент создан, но не добавлен в группу'),
+                  ),
+                );
+              }
             },
             child: const Text('Создать'),
           ),
@@ -220,20 +268,22 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-  // Диалог выбора существующего студента из общего списка
+    // Диалог выбора существующего студента из общего списка
   void _showExistingStudentsDialog(BuildContext context) {
-    final allStudents = ref.read(allStudentsProvider);
-    final groupStudents = ref.read(groupStudentsProvider(widget.groupId));
+    final allStudentsAsync = ref.read(allStudentsProvider);
+    final groupStudents =
+        ref.read(groupStudentsProvider(widget.groupId)).value ?? [];
     final existingIds = groupStudents.map((s) => s.id).toSet();
 
-    // Доступны те, кто ещё не в группе
-    final available = allStudents
-        .where((s) => !existingIds.contains(s.id))
-        .toList();
+    final allStudents = allStudentsAsync.value ?? [];
+    final available =
+        allStudents.where((s) => !existingIds.contains(s.id)).toList();
 
     if (available.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Нет доступных студентов для добавления')),
+        const SnackBar(
+          content: Text('Нет доступных студентов для добавления'),
+        ),
       );
       return;
     }
@@ -252,13 +302,22 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
               return ListTile(
                 title: Text(student.name),
                 subtitle: Text('Очки: ${student.dutyScore}'),
-                onTap: () {
-                  // Добавляем в группу
-                  ref
-                      .read(groupStudentsProvider(widget.groupId).notifier)
-                      .update((state) => [...state, student]);
+                onTap: () async {
                   Navigator.pop(ctx);
-                  _filterStudents();
+                  // Добавляем студента в группу через API
+                  final ok = await ref
+                      .read(
+                        groupStudentsProvider(widget.groupId).notifier,
+                      )
+                      .addStudentToGroup(student.id);
+
+                  if (!ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Не удалось добавить студента в группу'),
+                      ),
+                    );
+                  }
                 },
               );
             },
@@ -274,91 +333,81 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-  // Редактирование студента
+    // Редактирование студента через API
   void _editStudent(BuildContext context, Student student) {
     final nameController = TextEditingController(text: student.name);
-    final isActive = student.isActive;
-    final scoreController = TextEditingController(
-      text: student.dutyScore.toString(),
-    );
+    bool isActive = student.isActive;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Редактировать студента'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Имя'),
-                validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: scoreController,
-                decoration: const InputDecoration(labelText: 'Очки'),
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v == null || v.isEmpty) return null;
-                  if (int.tryParse(v) == null) return 'Введите число';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              SwitchListTile(
-                title: const Text('Активен'),
-                value: isActive,
-                onChanged:
-                    (val) {}, // будет обновлено позже, но для простоты оставим
-              ),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Редактировать студента'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Имя'),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Введите имя' : null,
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  title: const Text('Активен'),
+                  value: isActive,
+                  onChanged: (val) =>
+                      setDialogState(() => isActive = val),
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Отмена'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                Navigator.pop(ctx);
+
+                // Обновляем студента через API
+                final ok = await ref
+                    .read(allStudentsProvider.notifier)
+                    .updateStudent(
+                      student.id,
+                      name: nameController.text.trim(),
+                      isActive: isActive,
+                    );
+
+                // Перезагружаем студентов группы чтобы отобразить изменения
+                if (ok) {
+                  await ref
+                      .read(
+                        groupStudentsProvider(widget.groupId).notifier,
+                      )
+                      .reload();
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Не удалось обновить студента'),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Сохранить'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-
-              final updatedStudent = student.copyWith(
-                name: nameController.text.trim(),
-                dutyScore:
-                    int.tryParse(scoreController.text) ?? student.dutyScore,
-                // isActive: , если нужно менять активность, нужно добавить состояние
-              );
-
-              // Обновляем в общем списке
-              ref
-                  .read(allStudentsProvider.notifier)
-                  .updateStudent(updatedStudent);
-
-              // Обновляем в группе (заменяем студента)
-              ref.read(groupStudentsProvider(widget.groupId).notifier).update((
-                state,
-              ) {
-                return state
-                    .map((s) => s.id == updatedStudent.id ? updatedStudent : s)
-                    .toList();
-              });
-
-              Navigator.pop(ctx);
-              _filterStudents();
-            },
-            child: const Text('Сохранить'),
-          ),
-        ],
       ),
     );
   }
 
-  // Удаление студента из группы
+    // Удаление студента из группы через API
   void _removeStudentFromGroup(BuildContext context, int studentId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -382,9 +431,16 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
     if (confirm != true) return;
 
-    ref.read(groupStudentsProvider(widget.groupId).notifier).update((state) {
-      return state.where((s) => s.id != studentId).toList();
-    });
-    _filterStudents();
+    final ok = await ref
+        .read(groupStudentsProvider(widget.groupId).notifier)
+        .removeStudentFromGroup(studentId);
+
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Не удалось удалить студента из группы'),
+        ),
+      );
+    }
   }
 }

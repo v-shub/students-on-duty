@@ -6,52 +6,74 @@ part of 'api_client.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AuthResponseImpl _$$AuthResponseImplFromJson(Map<String, dynamic> json) =>
-    _$AuthResponseImpl(
-      accessToken: json['accessToken'] as String,
-      refreshToken: json['refreshToken'] as String,
+_AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>
+    _AuthResponse(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
     );
 
-Map<String, dynamic> _$$AuthResponseImplToJson(_$AuthResponseImpl instance) =>
+Map<String, dynamic> _$AuthResponseToJson(_AuthResponse instance) =>
     <String, dynamic>{
-      'accessToken': instance.accessToken,
-      'refreshToken': instance.refreshToken,
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
     };
 
-_$RefreshResponseImpl _$$RefreshResponseImplFromJson(
-  Map<String, dynamic> json,
-) => _$RefreshResponseImpl(
-  accessToken: json['accessToken'] as String,
-  refreshToken: json['refreshToken'] as String,
-);
+_RefreshResponse _$RefreshResponseFromJson(Map<String, dynamic> json) =>
+    _RefreshResponse(
+      accessToken: json['access_token'] as String,
+      refreshToken: json['refresh_token'] as String,
+    );
 
-Map<String, dynamic> _$$RefreshResponseImplToJson(
-  _$RefreshResponseImpl instance,
-) => <String, dynamic>{
-  'accessToken': instance.accessToken,
-  'refreshToken': instance.refreshToken,
-};
+Map<String, dynamic> _$RefreshResponseToJson(_RefreshResponse instance) =>
+    <String, dynamic>{
+      'access_token': instance.accessToken,
+      'refresh_token': instance.refreshToken,
+    };
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$apiClientHash() => r'37e1c874a747ffef123021d7745d33ea4afea4f0';
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
 
-/// See also [apiClient].
 @ProviderFor(apiClient)
-final apiClientProvider = AutoDisposeProvider<ApiClient>.internal(
-  apiClient,
-  name: r'apiClientProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$apiClientHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
+final apiClientProvider = ApiClientProvider._();
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef ApiClientRef = AutoDisposeProviderRef<ApiClient>;
-// ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+final class ApiClientProvider
+    extends $FunctionalProvider<ApiClient, ApiClient, ApiClient>
+    with $Provider<ApiClient> {
+  ApiClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'apiClientProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$apiClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<ApiClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ApiClient create(Ref ref) {
+    return apiClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ApiClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ApiClient>(value),
+    );
+  }
+}
+
+String _$apiClientHash() => r'246a7ae47c89e2ff543af1f79ef41f626b70c4b1';

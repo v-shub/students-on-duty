@@ -6,26 +6,26 @@ part of 'create_duty_schedule_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CreateDutyScheduleDtoImpl _$$CreateDutyScheduleDtoImplFromJson(
+_CreateDutyScheduleDto _$CreateDutyScheduleDtoFromJson(
   Map<String, dynamic> json,
-) => _$CreateDutyScheduleDtoImpl(
-  groupId: (json['groupId'] as num).toInt(),
-  dutyTypeId: (json['dutyTypeId'] as num).toInt(),
-  studentsPerDay: (json['studentsPerDay'] as num).toInt(),
-  startDate: json['startDate'] as String,
-  endDate: json['endDate'] as String?,
-  dutyDays: (json['dutyDays'] as Map<String, dynamic>?)?.map(
+) => _CreateDutyScheduleDto(
+  groupId: (json['group_id'] as num).toInt(),
+  dutyTypeId: (json['duty_type_id'] as num).toInt(),
+  studentsPerDay: (json['students_per_day'] as num).toInt(),
+  startDate: json['start_date'] as String,
+  endDate: json['end_date'] as String?,
+  dutyDays: (json['duty_days'] as Map<String, dynamic>?)?.map(
     (k, e) => MapEntry(k, e as bool),
   ),
 );
 
-Map<String, dynamic> _$$CreateDutyScheduleDtoImplToJson(
-  _$CreateDutyScheduleDtoImpl instance,
+Map<String, dynamic> _$CreateDutyScheduleDtoToJson(
+  _CreateDutyScheduleDto instance,
 ) => <String, dynamic>{
-  'groupId': instance.groupId,
-  'dutyTypeId': instance.dutyTypeId,
-  'studentsPerDay': instance.studentsPerDay,
-  'startDate': instance.startDate,
-  'endDate': instance.endDate,
-  'dutyDays': instance.dutyDays,
+  'group_id': instance.groupId,
+  'duty_type_id': instance.dutyTypeId,
+  'students_per_day': instance.studentsPerDay,
+  'start_date': instance.startDate,
+  'end_date': instance.endDate,
+  'duty_days': instance.dutyDays,
 };

@@ -1,73 +1,65 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_event.dart';
+import 'package:frontend/data/services/api_client.dart';
 
-// Хранилище событий для каждого расписания
-final _eventsStorage = <int, List<DutyEvent>>{};
+/// Провайдер событий дежурств для конкретного расписания — данные из API
+class DutyEventsNotifier extends AsyncNotifier<List<DutyEvent>> {
+  final int _scheduleId;
 
-class DutyEventsNotifier extends StateNotifier<Map<int, List<DutyEvent>>> {
-  DutyEventsNotifier() : super(_eventsStorage);
+  DutyEventsNotifier(this._scheduleId);
 
-  // Получить события для конкретного расписания
-  List<DutyEvent> getForSchedule(int scheduleId) {
-    return state[scheduleId] ?? [];
+  @override
+  Future<List<DutyEvent>> build() async {
+    return await ref
+        .read(apiClientProvider)
+        .getDutyEvents(scheduleId: _scheduleId);
   }
 
-  // Сгенерировать события на определённую дату (ручная генерация)
-  Future<void> generateEvents(
-    int scheduleId,
-    DateTime date,
-    List<int> studentIds,
-  ) async {
-    final current = List<DutyEvent>.from(state[scheduleId] ?? []);
-    // Простая генерация: создаём событие для каждого студента
-    final newEvents = studentIds
-        .map(
-          (studentId) => DutyEvent(
-            id: _nextId(scheduleId),
-            studentId: studentId,
-            scheduleId: scheduleId,
-            dutyDate: date,
-            status: DutyEventStatus.pending,
-            scoreEarned: null,
-            notes: null,
-            assignedAt: DateTime.now(),
-          ),
-        )
-        .toList();
-
-    final updated = [...current, ...newEvents];
-    _eventsStorage[scheduleId] = updated;
-    state = {...state, scheduleId: updated};
+  /// Перезагрузить события из API
+  Future<void> reload() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref
+          .read(apiClientProvider)
+          .getDutyEvents(scheduleId: _scheduleId),
+    );
   }
 
-  // Обновить статус события
-  Future<void> updateEventStatus(
-    int scheduleId,
+  /// Сгенерировать события на дату через API
+  Future<bool> generateEvents(DateTime date) async {
+    try {
+      final newEvents = await ref
+          .read(apiClientProvider)
+          .generateDutyEvents(_scheduleId, date);
+      state = AsyncValue.data([...state.value ?? [], ...newEvents]);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Обновить статус события через API
+  Future<bool> updateEventStatus(
     int eventId,
     DutyEventStatus status, {
     String? notes,
   }) async {
-    final current = List<DutyEvent>.from(state[scheduleId] ?? []);
-    final index = current.indexWhere((e) => e.id == eventId);
-    if (index == -1) return;
-
-    final updatedEvent = current[index].copyWith(
-      status: status,
-      notes: notes ?? current[index].notes,
-    );
-    current[index] = updatedEvent;
-    _eventsStorage[scheduleId] = current;
-    state = {...state, scheduleId: current};
-  }
-
-  int _nextId(int scheduleId) {
-    final events = state[scheduleId] ?? [];
-    if (events.isEmpty) return 1;
-    return events.map((e) => e.id).reduce((a, b) => a > b ? a : b) + 1;
+    try {
+      final updated = await ref
+          .read(apiClientProvider)
+          .updateDutyEventStatus(eventId, status, notes: notes);
+      state = AsyncValue.data([
+        for (final e in state.value ?? [])
+          if (e.id == updated.id) updated else e,
+      ]);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
 
 final dutyEventsProvider =
-    StateNotifierProvider<DutyEventsNotifier, Map<int, List<DutyEvent>>>((ref) {
-      return DutyEventsNotifier();
-    });
+    AsyncNotifierProvider.family<DutyEventsNotifier, List<DutyEvent>, int>(
+      (arg) => DutyEventsNotifier(arg),
+    );

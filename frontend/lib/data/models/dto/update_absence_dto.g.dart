@@ -6,22 +6,20 @@ part of 'update_absence_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$UpdateAbsenceDtoImpl _$$UpdateAbsenceDtoImplFromJson(
-  Map<String, dynamic> json,
-) => _$UpdateAbsenceDtoImpl(
-  studentId: (json['studentId'] as num?)?.toInt(),
-  dateFrom: json['dateFrom'] as String?,
-  dateTo: json['dateTo'] as String?,
-  reason: json['reason'] as String?,
-  isApproved: json['isApproved'] as bool?,
-);
+_UpdateAbsenceDto _$UpdateAbsenceDtoFromJson(Map<String, dynamic> json) =>
+    _UpdateAbsenceDto(
+      studentId: (json['student_id'] as num?)?.toInt(),
+      dateFrom: json['date_from'] as String?,
+      dateTo: json['date_to'] as String?,
+      reason: json['reason'] as String?,
+      isApproved: json['is_approved'] as bool?,
+    );
 
-Map<String, dynamic> _$$UpdateAbsenceDtoImplToJson(
-  _$UpdateAbsenceDtoImpl instance,
-) => <String, dynamic>{
-  'studentId': instance.studentId,
-  'dateFrom': instance.dateFrom,
-  'dateTo': instance.dateTo,
-  'reason': instance.reason,
-  'isApproved': instance.isApproved,
-};
+Map<String, dynamic> _$UpdateAbsenceDtoToJson(_UpdateAbsenceDto instance) =>
+    <String, dynamic>{
+      'student_id': instance.studentId,
+      'date_from': instance.dateFrom,
+      'date_to': instance.dateTo,
+      'reason': instance.reason,
+      'is_approved': instance.isApproved,
+    };

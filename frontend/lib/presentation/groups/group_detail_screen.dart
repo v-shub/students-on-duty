@@ -2,11 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/group.dart';
-import 'group_schedules_tab.dart' hide GroupSchedulesTab;
-import 'group_students_tab.dart' hide GroupSchedulesTab;
 import 'package:frontend/core/constants/app_colors.dart';
-import 'package:frontend/presentation/groups/group_students_tab.dart'
-    hide GroupSchedulesTab;
+import 'package:frontend/presentation/groups/group_students_tab.dart';
 import 'package:frontend/presentation/groups/group_schedules_tab.dart';
 
 class GroupDetailScreen extends ConsumerStatefulWidget {

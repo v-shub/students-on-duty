@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,180 +9,272 @@ part of 'create_group_dto.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-CreateGroupDto _$CreateGroupDtoFromJson(Map<String, dynamic> json) {
-  return _CreateGroupDto.fromJson(json);
-}
 
 /// @nodoc
 mixin _$CreateGroupDto {
-  String get name => throw _privateConstructorUsedError;
-  String? get description => throw _privateConstructorUsedError;
+
+ String get name; String? get description;
+/// Create a copy of CreateGroupDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CreateGroupDtoCopyWith<CreateGroupDto> get copyWith => _$CreateGroupDtoCopyWithImpl<CreateGroupDto>(this as CreateGroupDto, _$identity);
 
   /// Serializes this CreateGroupDto to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of CreateGroupDto
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $CreateGroupDtoCopyWith<CreateGroupDto> get copyWith =>
-      throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateGroupDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,description);
+
+@override
+String toString() {
+  return 'CreateGroupDto(name: $name, description: $description)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $CreateGroupDtoCopyWith<$Res> {
-  factory $CreateGroupDtoCopyWith(
-    CreateGroupDto value,
-    $Res Function(CreateGroupDto) then,
-  ) = _$CreateGroupDtoCopyWithImpl<$Res, CreateGroupDto>;
-  @useResult
-  $Res call({String name, String? description});
-}
+abstract mixin class $CreateGroupDtoCopyWith<$Res>  {
+  factory $CreateGroupDtoCopyWith(CreateGroupDto value, $Res Function(CreateGroupDto) _then) = _$CreateGroupDtoCopyWithImpl;
+@useResult
+$Res call({
+ String name, String? description
+});
 
+
+
+
+}
 /// @nodoc
-class _$CreateGroupDtoCopyWithImpl<$Res, $Val extends CreateGroupDto>
+class _$CreateGroupDtoCopyWithImpl<$Res>
     implements $CreateGroupDtoCopyWith<$Res> {
-  _$CreateGroupDtoCopyWithImpl(this._value, this._then);
+  _$CreateGroupDtoCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final CreateGroupDto _self;
+  final $Res Function(CreateGroupDto) _then;
 
-  /// Create a copy of CreateGroupDto
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? name = null, Object? description = freezed}) {
-    return _then(
-      _value.copyWith(
-            name: null == name
-                ? _value.name
-                : name // ignore: cast_nullable_to_non_nullable
-                      as String,
-            description: freezed == description
-                ? _value.description
-                : description // ignore: cast_nullable_to_non_nullable
-                      as String?,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of CreateGroupDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? description = freezed,}) {
+  return _then(_self.copyWith(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$CreateGroupDtoImplCopyWith<$Res>
-    implements $CreateGroupDtoCopyWith<$Res> {
-  factory _$$CreateGroupDtoImplCopyWith(
-    _$CreateGroupDtoImpl value,
-    $Res Function(_$CreateGroupDtoImpl) then,
-  ) = __$$CreateGroupDtoImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({String name, String? description});
 }
 
-/// @nodoc
-class __$$CreateGroupDtoImplCopyWithImpl<$Res>
-    extends _$CreateGroupDtoCopyWithImpl<$Res, _$CreateGroupDtoImpl>
-    implements _$$CreateGroupDtoImplCopyWith<$Res> {
-  __$$CreateGroupDtoImplCopyWithImpl(
-    _$CreateGroupDtoImpl _value,
-    $Res Function(_$CreateGroupDtoImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of CreateGroupDto
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({Object? name = null, Object? description = freezed}) {
-    return _then(
-      _$CreateGroupDtoImpl(
-        name: null == name
-            ? _value.name
-            : name // ignore: cast_nullable_to_non_nullable
-                  as String,
-        description: freezed == description
-            ? _value.description
-            : description // ignore: cast_nullable_to_non_nullable
-                  as String?,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [CreateGroupDto].
+extension CreateGroupDtoPatterns on CreateGroupDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CreateGroupDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _CreateGroupDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CreateGroupDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _CreateGroupDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CreateGroupDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _CreateGroupDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _CreateGroupDto() when $default != null:
+return $default(_that.name,_that.description);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? description)  $default,) {final _that = this;
+switch (_that) {
+case _CreateGroupDto():
+return $default(_that.name,_that.description);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? description)?  $default,) {final _that = this;
+switch (_that) {
+case _CreateGroupDto() when $default != null:
+return $default(_that.name,_that.description);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$CreateGroupDtoImpl implements _CreateGroupDto {
-  const _$CreateGroupDtoImpl({required this.name, this.description});
 
-  factory _$CreateGroupDtoImpl.fromJson(Map<String, dynamic> json) =>
-      _$$CreateGroupDtoImplFromJson(json);
+class _CreateGroupDto implements CreateGroupDto {
+  const _CreateGroupDto({required this.name, this.description});
+  factory _CreateGroupDto.fromJson(Map<String, dynamic> json) => _$CreateGroupDtoFromJson(json);
 
-  @override
-  final String name;
-  @override
-  final String? description;
+@override final  String name;
+@override final  String? description;
 
-  @override
-  String toString() {
-    return 'CreateGroupDto(name: $name, description: $description)';
-  }
+/// Create a copy of CreateGroupDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CreateGroupDtoCopyWith<_CreateGroupDto> get copyWith => __$CreateGroupDtoCopyWithImpl<_CreateGroupDto>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$CreateGroupDtoImpl &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.description, description) ||
-                other.description == description));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(runtimeType, name, description);
-
-  /// Create a copy of CreateGroupDto
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$CreateGroupDtoImplCopyWith<_$CreateGroupDtoImpl> get copyWith =>
-      __$$CreateGroupDtoImplCopyWithImpl<_$CreateGroupDtoImpl>(
-        this,
-        _$identity,
-      );
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$CreateGroupDtoImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$CreateGroupDtoToJson(this, );
 }
 
-abstract class _CreateGroupDto implements CreateGroupDto {
-  const factory _CreateGroupDto({
-    required final String name,
-    final String? description,
-  }) = _$CreateGroupDtoImpl;
-
-  factory _CreateGroupDto.fromJson(Map<String, dynamic> json) =
-      _$CreateGroupDtoImpl.fromJson;
-
-  @override
-  String get name;
-  @override
-  String? get description;
-
-  /// Create a copy of CreateGroupDto
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$CreateGroupDtoImplCopyWith<_$CreateGroupDtoImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateGroupDto&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,name,description);
+
+@override
+String toString() {
+  return 'CreateGroupDto(name: $name, description: $description)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CreateGroupDtoCopyWith<$Res> implements $CreateGroupDtoCopyWith<$Res> {
+  factory _$CreateGroupDtoCopyWith(_CreateGroupDto value, $Res Function(_CreateGroupDto) _then) = __$CreateGroupDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ String name, String? description
+});
+
+
+
+
+}
+/// @nodoc
+class __$CreateGroupDtoCopyWithImpl<$Res>
+    implements _$CreateGroupDtoCopyWith<$Res> {
+  __$CreateGroupDtoCopyWithImpl(this._self, this._then);
+
+  final _CreateGroupDto _self;
+  final $Res Function(_CreateGroupDto) _then;
+
+/// Create a copy of CreateGroupDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? description = freezed,}) {
+  return _then(_CreateGroupDto(
+name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
+
+// dart format on

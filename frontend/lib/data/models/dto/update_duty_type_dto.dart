@@ -4,11 +4,11 @@ part 'update_duty_type_dto.freezed.dart';
 part 'update_duty_type_dto.g.dart';
 
 @freezed
-class UpdateDutyTypeDto with _$UpdateDutyTypeDto {
-  const factory UpdateDutyTypeDto({
+abstract class UpdateDutyTypeDto with _$UpdateDutyTypeDto {
+    const factory UpdateDutyTypeDto({
     String? name,
     String? description,
-    int? defaultScore,
+    @JsonKey(name: 'default_score') int? defaultScore,
   }) = _UpdateDutyTypeDto;
 
   factory UpdateDutyTypeDto.fromJson(Map<String, dynamic> json) =>

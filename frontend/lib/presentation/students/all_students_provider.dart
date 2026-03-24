@@ -1,40 +1,73 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/student.dart';
 
-// Мок-список всех студентов пользователя (изначально пустой, можно добавить пару для демонстрации)
-final List<Student> _mockAllStudents = [
-  const Student(id: 1, name: 'Иванов Иван', isActive: true, dutyScore: 0),
-  const Student(id: 2, name: 'Петров Пётр', isActive: true, dutyScore: 5),
-  const Student(id: 3, name: 'Сидорова Анна', isActive: false, dutyScore: 2),
-  const Student(id: 4, name: 'Кузнецов Дмитрий', isActive: true, dutyScore: 3),
-  const Student(id: 5, name: 'Смирнова Елена', isActive: true, dutyScore: 1),
-];
+import 'package:frontend/data/services/api_client.dart';
 
-class AllStudentsNotifier extends StateNotifier<List<Student>> {
-  AllStudentsNotifier() : super(_mockAllStudents);
-
-  // Добавление нового студента
-  void addStudent(Student student) {
-    state = [...state, student];
+/// Провайдер всех студентов пользователя — загружается из API
+class AllStudentsNotifier extends AsyncNotifier<List<Student>> {
+  @override
+  Future<List<Student>> build() async {
+    return await ref.read(apiClientProvider).getStudents();
   }
 
-  // Обновление существующего
-  void updateStudent(Student updated) {
-    state = [
-      for (final s in state)
-        if (s.id == updated.id) updated else s,
-    ];
+  /// Обновить список из API
+  Future<void> reload() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(apiClientProvider).getStudents(),
+    );
   }
 
-  // Удаление (если потребуется)
-  void deleteStudent(int id) {
-    state = state.where((s) => s.id != id).toList();
+  /// Создать нового студента через API и добавить в список
+  Future<Student?> createStudent(String name, {bool isActive = true}) async {
+    try {
+      final student = await ref
+          .read(apiClientProvider)
+          .createStudent(name, isActive: isActive);
+      state = AsyncValue.data([...state.value ?? [], student]);
+      return student;
+    } catch (e) {
+      return null;
+    }
   }
 
-  // Поиск студента по id (для получения)
+  /// Обновить студента через API
+  Future<bool> updateStudent(
+    int id, {
+    String? name,
+    bool? isActive,
+  }) async {
+    try {
+      final updated = await ref
+          .read(apiClientProvider)
+          .updateStudent(id, name: name, isActive: isActive);
+      state = AsyncValue.data([
+        for (final s in state.value ?? [])
+          if (s.id == updated.id) updated else s,
+      ]);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Удалить студента через API
+  Future<bool> deleteStudent(int id) async {
+    try {
+      await ref.read(apiClientProvider).deleteStudent(id);
+      state = AsyncValue.data(
+        (state.value ?? []).where((s) => s.id != id).toList(),
+      );
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Найти студента по id в текущем списке
   Student? getById(int id) {
     try {
-      return state.firstWhere((s) => s.id == id);
+      return state.value?.firstWhere((s) => s.id == id);
     } catch (e) {
       return null;
     }
@@ -42,6 +75,6 @@ class AllStudentsNotifier extends StateNotifier<List<Student>> {
 }
 
 final allStudentsProvider =
-    StateNotifierProvider<AllStudentsNotifier, List<Student>>((ref) {
-      return AllStudentsNotifier();
-    });
+    AsyncNotifierProvider<AllStudentsNotifier, List<Student>>(
+      AllStudentsNotifier.new,
+    );

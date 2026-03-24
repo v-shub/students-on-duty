@@ -4,8 +4,7 @@ import 'package:frontend/data/models/duty_event.dart';
 import 'package:frontend/data/models/duty_schedule.dart';
 import 'package:frontend/data/models/student.dart';
 import 'package:frontend/presentation/schedules/duty_events_provider.dart';
-import 'package:frontend/presentation/groups/group_students_tab.dart'; // для groupStudentsProvider
-import 'package:frontend/presentation/students/all_students_provider.dart';
+import 'package:frontend/presentation/groups/group_students_tab.dart';
 
 class ScheduleEventsScreen extends ConsumerStatefulWidget {
   final DutySchedule schedule;
@@ -17,24 +16,16 @@ class ScheduleEventsScreen extends ConsumerStatefulWidget {
 }
 
 class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
-  DateTime _selectedDate = DateTime.now();
+    DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
-    final events = ref.watch(dutyEventsProvider)[widget.schedule.id] ?? [];
-    final groupStudents = ref.watch(
-      groupStudentsProvider(widget.schedule.groupId),
-    );
-    final allStudents = ref.watch(allStudentsProvider);
-
-    final eventsForDate = events
-        .where(
-          (e) =>
-              e.dutyDate.year == _selectedDate.year &&
-              e.dutyDate.month == _selectedDate.month &&
-              e.dutyDate.day == _selectedDate.day,
-        )
-        .toList();
+    // Загружаем события для данного расписания из API
+    final eventsAsync =
+        ref.watch(dutyEventsProvider(widget.schedule.id));
+    // Загружаем студентов группы для отображения имён
+    final groupStudentsAsync =
+        ref.watch(groupStudentsProvider(widget.schedule.groupId));
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +35,12 @@ class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
             icon: const Icon(Icons.calendar_today),
             onPressed: _pickDate,
           ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref
+                .read(dutyEventsProvider(widget.schedule.id).notifier)
+                .reload(),
+          ),
         ],
       ),
       body: Column(
@@ -52,21 +49,52 @@ class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               'Дата: ${_selectedDate.day}.${_selectedDate.month}.${_selectedDate.year}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           Expanded(
-            child: eventsForDate.isEmpty
-                ? const Center(child: Text('Нет событий на эту дату'))
-                : ListView.builder(
+            child: eventsAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, _) =>
+                  Center(child: Text('Ошибка загрузки событий: $e')),
+              data: (events) {
+                final eventsForDate = events
+                    .where(
+                      (e) =>
+                          e.dutyDate.year == _selectedDate.year &&
+                          e.dutyDate.month == _selectedDate.month &&
+                          e.dutyDate.day == _selectedDate.day,
+                    )
+                    .toList();
+
+                if (eventsForDate.isEmpty) {
+                  return const Center(
+                    child: Text('Нет событий на эту дату'),
+                  );
+                }
+
+                final students =
+                    groupStudentsAsync.value ?? <Student>[];
+
+                return RefreshIndicator(
+                  onRefresh: () => ref
+                      .read(
+                        dutyEventsProvider(widget.schedule.id).notifier,
+                      )
+                      .reload(),
+                  child: ListView.builder(
                     itemCount: eventsForDate.length,
                     itemBuilder: (ctx, i) {
                       final event = eventsForDate[i];
-                      final student = allStudents.firstWhere(
+                      final student = students.firstWhere(
                         (s) => s.id == event.studentId,
                         orElse: () => Student(
                           id: event.studentId,
-                          name: 'Неизвестно',
+                          name: 'Студент #${event.studentId}',
                           isActive: false,
                           dutyScore: 0,
                         ),
@@ -82,14 +110,39 @@ class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
                             'Статус: ${_statusText(event.status)}',
                           ),
                           trailing: PopupMenuButton<DutyEventStatus>(
-                            onSelected: (status) {
-                              ref
-                                  .read(dutyEventsProvider.notifier)
-                                  .updateEventStatus(
-                                    widget.schedule.id,
-                                    event.id,
-                                    status,
-                                  );
+                            onSelected: (status) async {
+                              // Обновляем статус через API
+                              // API принимает только completed и cancelled
+                              if (status == DutyEventStatus.pending ||
+                                  status ==
+                                      DutyEventStatus.reassigned) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Недопустимый статус для ручного изменения',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              final ok = await ref
+                                  .read(
+                                    dutyEventsProvider(
+                                      widget.schedule.id,
+                                    ).notifier,
+                                  )
+                                  .updateEventStatus(event.id, status);
+                              if (!ok && context.mounted) {
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Не удалось обновить статус',
+                                    ),
+                                  ),
+                                );
+                              }
                             },
                             itemBuilder: (ctx) => [
                               const PopupMenuItem(
@@ -100,22 +153,22 @@ class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
                                 value: DutyEventStatus.cancelled,
                                 child: Text('Отменено'),
                               ),
-                              const PopupMenuItem(
-                                value: DutyEventStatus.pending,
-                                child: Text('Ожидает'),
-                              ),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _generateEvents,
-        child: const Icon(Icons.add),
+        tooltip: 'Сгенерировать события на выбранную дату',
+        child: const Icon(Icons.auto_awesome),
       ),
     );
   }
@@ -145,24 +198,27 @@ class _ScheduleEventsScreenState extends ConsumerState<ScheduleEventsScreen> {
     }
   }
 
-  Future<void> _generateEvents() async {
-    // Получаем актуальный список студентов группы
-    final groupStudents = ref.read(
-      groupStudentsProvider(widget.schedule.groupId),
-    );
-    if (groupStudents.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('В группе нет студентов для генерации событий'),
-        ),
-      );
-      return;
+    Future<void> _generateEvents() async {
+    // Генерируем события через API — бэкенд сам выбирает студентов
+    final ok = await ref
+        .read(dutyEventsProvider(widget.schedule.id).notifier)
+        .generateEvents(_selectedDate);
+
+    if (mounted) {
+      if (ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('События успешно сгенерированы')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Не удалось сгенерировать события. '
+              'Проверьте наличие активных студентов в группе.',
+            ),
+          ),
+        );
+      }
     }
-    final studentIds = groupStudents.map((s) => s.id).toList();
-    await ref
-        .read(dutyEventsProvider.notifier)
-        .generateEvents(widget.schedule.id, _selectedDate, studentIds);
-    // Обновляем UI
-    setState(() {});
   }
 }

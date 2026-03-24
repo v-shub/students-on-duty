@@ -6,30 +6,29 @@ part of 'duty_event.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$DutyEventImpl _$$DutyEventImplFromJson(Map<String, dynamic> json) =>
-    _$DutyEventImpl(
-      id: (json['id'] as num).toInt(),
-      studentId: (json['studentId'] as num).toInt(),
-      scheduleId: (json['scheduleId'] as num).toInt(),
-      dutyDate: DateTime.parse(json['dutyDate'] as String),
-      status: $enumDecode(_$DutyEventStatusEnumMap, json['status']),
-      scoreEarned: (json['scoreEarned'] as num?)?.toInt(),
-      notes: json['notes'] as String?,
-      assignedAt: json['assignedAt'] == null
-          ? null
-          : DateTime.parse(json['assignedAt'] as String),
-    );
+_DutyEvent _$DutyEventFromJson(Map<String, dynamic> json) => _DutyEvent(
+  id: (json['id'] as num).toInt(),
+  studentId: (json['student_id'] as num).toInt(),
+  scheduleId: (json['schedule_id'] as num).toInt(),
+  dutyDate: DateTime.parse(json['duty_date'] as String),
+  status: $enumDecode(_$DutyEventStatusEnumMap, json['status']),
+  scoreEarned: (json['score_earned'] as num?)?.toInt(),
+  notes: json['notes'] as String?,
+  assignedAt: json['assigned_at'] == null
+      ? null
+      : DateTime.parse(json['assigned_at'] as String),
+);
 
-Map<String, dynamic> _$$DutyEventImplToJson(_$DutyEventImpl instance) =>
+Map<String, dynamic> _$DutyEventToJson(_DutyEvent instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'studentId': instance.studentId,
-      'scheduleId': instance.scheduleId,
-      'dutyDate': instance.dutyDate.toIso8601String(),
+      'student_id': instance.studentId,
+      'schedule_id': instance.scheduleId,
+      'duty_date': instance.dutyDate.toIso8601String(),
       'status': _$DutyEventStatusEnumMap[instance.status]!,
-      'scoreEarned': instance.scoreEarned,
+      'score_earned': instance.scoreEarned,
       'notes': instance.notes,
-      'assignedAt': instance.assignedAt?.toIso8601String(),
+      'assigned_at': instance.assignedAt?.toIso8601String(),
     };
 
 const _$DutyEventStatusEnumMap = {

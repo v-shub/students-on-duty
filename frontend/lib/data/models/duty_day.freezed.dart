@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,331 +9,290 @@ part of 'duty_day.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
-);
-
-DutyDay _$DutyDayFromJson(Map<String, dynamic> json) {
-  return _DutyDay.fromJson(json);
-}
 
 /// @nodoc
 mixin _$DutyDay {
-  int get scheduleId => throw _privateConstructorUsedError;
-  bool get isMonday => throw _privateConstructorUsedError;
-  bool get isTuesday => throw _privateConstructorUsedError;
-  bool get isWednesday => throw _privateConstructorUsedError;
-  bool get isThursday => throw _privateConstructorUsedError;
-  bool get isFriday => throw _privateConstructorUsedError;
-  bool get isSaturday => throw _privateConstructorUsedError;
-  bool get isSunday => throw _privateConstructorUsedError;
+
+ int get scheduleId; bool get isMonday; bool get isTuesday; bool get isWednesday; bool get isThursday; bool get isFriday; bool get isSaturday; bool get isSunday;
+/// Create a copy of DutyDay
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DutyDayCopyWith<DutyDay> get copyWith => _$DutyDayCopyWithImpl<DutyDay>(this as DutyDay, _$identity);
 
   /// Serializes this DutyDay to a JSON map.
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+  Map<String, dynamic> toJson();
 
-  /// Create a copy of DutyDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  $DutyDayCopyWith<DutyDay> get copyWith => throw _privateConstructorUsedError;
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DutyDay&&(identical(other.scheduleId, scheduleId) || other.scheduleId == scheduleId)&&(identical(other.isMonday, isMonday) || other.isMonday == isMonday)&&(identical(other.isTuesday, isTuesday) || other.isTuesday == isTuesday)&&(identical(other.isWednesday, isWednesday) || other.isWednesday == isWednesday)&&(identical(other.isThursday, isThursday) || other.isThursday == isThursday)&&(identical(other.isFriday, isFriday) || other.isFriday == isFriday)&&(identical(other.isSaturday, isSaturday) || other.isSaturday == isSaturday)&&(identical(other.isSunday, isSunday) || other.isSunday == isSunday));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,scheduleId,isMonday,isTuesday,isWednesday,isThursday,isFriday,isSaturday,isSunday);
+
+@override
+String toString() {
+  return 'DutyDay(scheduleId: $scheduleId, isMonday: $isMonday, isTuesday: $isTuesday, isWednesday: $isWednesday, isThursday: $isThursday, isFriday: $isFriday, isSaturday: $isSaturday, isSunday: $isSunday)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $DutyDayCopyWith<$Res> {
-  factory $DutyDayCopyWith(DutyDay value, $Res Function(DutyDay) then) =
-      _$DutyDayCopyWithImpl<$Res, DutyDay>;
-  @useResult
-  $Res call({
-    int scheduleId,
-    bool isMonday,
-    bool isTuesday,
-    bool isWednesday,
-    bool isThursday,
-    bool isFriday,
-    bool isSaturday,
-    bool isSunday,
-  });
-}
+abstract mixin class $DutyDayCopyWith<$Res>  {
+  factory $DutyDayCopyWith(DutyDay value, $Res Function(DutyDay) _then) = _$DutyDayCopyWithImpl;
+@useResult
+$Res call({
+ int scheduleId, bool isMonday, bool isTuesday, bool isWednesday, bool isThursday, bool isFriday, bool isSaturday, bool isSunday
+});
 
+
+
+
+}
 /// @nodoc
-class _$DutyDayCopyWithImpl<$Res, $Val extends DutyDay>
+class _$DutyDayCopyWithImpl<$Res>
     implements $DutyDayCopyWith<$Res> {
-  _$DutyDayCopyWithImpl(this._value, this._then);
+  _$DutyDayCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final DutyDay _self;
+  final $Res Function(DutyDay) _then;
 
-  /// Create a copy of DutyDay
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? scheduleId = null,
-    Object? isMonday = null,
-    Object? isTuesday = null,
-    Object? isWednesday = null,
-    Object? isThursday = null,
-    Object? isFriday = null,
-    Object? isSaturday = null,
-    Object? isSunday = null,
-  }) {
-    return _then(
-      _value.copyWith(
-            scheduleId: null == scheduleId
-                ? _value.scheduleId
-                : scheduleId // ignore: cast_nullable_to_non_nullable
-                      as int,
-            isMonday: null == isMonday
-                ? _value.isMonday
-                : isMonday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isTuesday: null == isTuesday
-                ? _value.isTuesday
-                : isTuesday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isWednesday: null == isWednesday
-                ? _value.isWednesday
-                : isWednesday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isThursday: null == isThursday
-                ? _value.isThursday
-                : isThursday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isFriday: null == isFriday
-                ? _value.isFriday
-                : isFriday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isSaturday: null == isSaturday
-                ? _value.isSaturday
-                : isSaturday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-            isSunday: null == isSunday
-                ? _value.isSunday
-                : isSunday // ignore: cast_nullable_to_non_nullable
-                      as bool,
-          )
-          as $Val,
-    );
-  }
+/// Create a copy of DutyDay
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scheduleId = null,Object? isMonday = null,Object? isTuesday = null,Object? isWednesday = null,Object? isThursday = null,Object? isFriday = null,Object? isSaturday = null,Object? isSunday = null,}) {
+  return _then(_self.copyWith(
+scheduleId: null == scheduleId ? _self.scheduleId : scheduleId // ignore: cast_nullable_to_non_nullable
+as int,isMonday: null == isMonday ? _self.isMonday : isMonday // ignore: cast_nullable_to_non_nullable
+as bool,isTuesday: null == isTuesday ? _self.isTuesday : isTuesday // ignore: cast_nullable_to_non_nullable
+as bool,isWednesday: null == isWednesday ? _self.isWednesday : isWednesday // ignore: cast_nullable_to_non_nullable
+as bool,isThursday: null == isThursday ? _self.isThursday : isThursday // ignore: cast_nullable_to_non_nullable
+as bool,isFriday: null == isFriday ? _self.isFriday : isFriday // ignore: cast_nullable_to_non_nullable
+as bool,isSaturday: null == isSaturday ? _self.isSaturday : isSaturday // ignore: cast_nullable_to_non_nullable
+as bool,isSunday: null == isSunday ? _self.isSunday : isSunday // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
 }
 
-/// @nodoc
-abstract class _$$DutyDayImplCopyWith<$Res> implements $DutyDayCopyWith<$Res> {
-  factory _$$DutyDayImplCopyWith(
-    _$DutyDayImpl value,
-    $Res Function(_$DutyDayImpl) then,
-  ) = __$$DutyDayImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call({
-    int scheduleId,
-    bool isMonday,
-    bool isTuesday,
-    bool isWednesday,
-    bool isThursday,
-    bool isFriday,
-    bool isSaturday,
-    bool isSunday,
-  });
 }
 
-/// @nodoc
-class __$$DutyDayImplCopyWithImpl<$Res>
-    extends _$DutyDayCopyWithImpl<$Res, _$DutyDayImpl>
-    implements _$$DutyDayImplCopyWith<$Res> {
-  __$$DutyDayImplCopyWithImpl(
-    _$DutyDayImpl _value,
-    $Res Function(_$DutyDayImpl) _then,
-  ) : super(_value, _then);
 
-  /// Create a copy of DutyDay
-  /// with the given fields replaced by the non-null parameter values.
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? scheduleId = null,
-    Object? isMonday = null,
-    Object? isTuesday = null,
-    Object? isWednesday = null,
-    Object? isThursday = null,
-    Object? isFriday = null,
-    Object? isSaturday = null,
-    Object? isSunday = null,
-  }) {
-    return _then(
-      _$DutyDayImpl(
-        scheduleId: null == scheduleId
-            ? _value.scheduleId
-            : scheduleId // ignore: cast_nullable_to_non_nullable
-                  as int,
-        isMonday: null == isMonday
-            ? _value.isMonday
-            : isMonday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isTuesday: null == isTuesday
-            ? _value.isTuesday
-            : isTuesday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isWednesday: null == isWednesday
-            ? _value.isWednesday
-            : isWednesday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isThursday: null == isThursday
-            ? _value.isThursday
-            : isThursday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isFriday: null == isFriday
-            ? _value.isFriday
-            : isFriday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isSaturday: null == isSaturday
-            ? _value.isSaturday
-            : isSaturday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-        isSunday: null == isSunday
-            ? _value.isSunday
-            : isSunday // ignore: cast_nullable_to_non_nullable
-                  as bool,
-      ),
-    );
-  }
+/// Adds pattern-matching-related methods to [DutyDay].
+extension DutyDayPatterns on DutyDay {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DutyDay value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DutyDay() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DutyDay value)  $default,){
+final _that = this;
+switch (_that) {
+case _DutyDay():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DutyDay value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DutyDay() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DutyDay() when $default != null:
+return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)  $default,) {final _that = this;
+switch (_that) {
+case _DutyDay():
+return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)?  $default,) {final _that = this;
+switch (_that) {
+case _DutyDay() when $default != null:
+return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$DutyDayImpl implements _DutyDay {
-  const _$DutyDayImpl({
-    required this.scheduleId,
-    this.isMonday = false,
-    this.isTuesday = false,
-    this.isWednesday = false,
-    this.isThursday = false,
-    this.isFriday = false,
-    this.isSaturday = false,
-    this.isSunday = false,
-  });
 
-  factory _$DutyDayImpl.fromJson(Map<String, dynamic> json) =>
-      _$$DutyDayImplFromJson(json);
+class _DutyDay implements DutyDay {
+  const _DutyDay({required this.scheduleId, this.isMonday = false, this.isTuesday = false, this.isWednesday = false, this.isThursday = false, this.isFriday = false, this.isSaturday = false, this.isSunday = false});
+  factory _DutyDay.fromJson(Map<String, dynamic> json) => _$DutyDayFromJson(json);
 
-  @override
-  final int scheduleId;
-  @override
-  @JsonKey()
-  final bool isMonday;
-  @override
-  @JsonKey()
-  final bool isTuesday;
-  @override
-  @JsonKey()
-  final bool isWednesday;
-  @override
-  @JsonKey()
-  final bool isThursday;
-  @override
-  @JsonKey()
-  final bool isFriday;
-  @override
-  @JsonKey()
-  final bool isSaturday;
-  @override
-  @JsonKey()
-  final bool isSunday;
+@override final  int scheduleId;
+@override@JsonKey() final  bool isMonday;
+@override@JsonKey() final  bool isTuesday;
+@override@JsonKey() final  bool isWednesday;
+@override@JsonKey() final  bool isThursday;
+@override@JsonKey() final  bool isFriday;
+@override@JsonKey() final  bool isSaturday;
+@override@JsonKey() final  bool isSunday;
 
-  @override
-  String toString() {
-    return 'DutyDay(scheduleId: $scheduleId, isMonday: $isMonday, isTuesday: $isTuesday, isWednesday: $isWednesday, isThursday: $isThursday, isFriday: $isFriday, isSaturday: $isSaturday, isSunday: $isSunday)';
-  }
+/// Create a copy of DutyDay
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DutyDayCopyWith<_DutyDay> get copyWith => __$DutyDayCopyWithImpl<_DutyDay>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$DutyDayImpl &&
-            (identical(other.scheduleId, scheduleId) ||
-                other.scheduleId == scheduleId) &&
-            (identical(other.isMonday, isMonday) ||
-                other.isMonday == isMonday) &&
-            (identical(other.isTuesday, isTuesday) ||
-                other.isTuesday == isTuesday) &&
-            (identical(other.isWednesday, isWednesday) ||
-                other.isWednesday == isWednesday) &&
-            (identical(other.isThursday, isThursday) ||
-                other.isThursday == isThursday) &&
-            (identical(other.isFriday, isFriday) ||
-                other.isFriday == isFriday) &&
-            (identical(other.isSaturday, isSaturday) ||
-                other.isSaturday == isSaturday) &&
-            (identical(other.isSunday, isSunday) ||
-                other.isSunday == isSunday));
-  }
-
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  int get hashCode => Object.hash(
-    runtimeType,
-    scheduleId,
-    isMonday,
-    isTuesday,
-    isWednesday,
-    isThursday,
-    isFriday,
-    isSaturday,
-    isSunday,
-  );
-
-  /// Create a copy of DutyDay
-  /// with the given fields replaced by the non-null parameter values.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$DutyDayImplCopyWith<_$DutyDayImpl> get copyWith =>
-      __$$DutyDayImplCopyWithImpl<_$DutyDayImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$DutyDayImplToJson(this);
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$DutyDayToJson(this, );
 }
 
-abstract class _DutyDay implements DutyDay {
-  const factory _DutyDay({
-    required final int scheduleId,
-    final bool isMonday,
-    final bool isTuesday,
-    final bool isWednesday,
-    final bool isThursday,
-    final bool isFriday,
-    final bool isSaturday,
-    final bool isSunday,
-  }) = _$DutyDayImpl;
-
-  factory _DutyDay.fromJson(Map<String, dynamic> json) = _$DutyDayImpl.fromJson;
-
-  @override
-  int get scheduleId;
-  @override
-  bool get isMonday;
-  @override
-  bool get isTuesday;
-  @override
-  bool get isWednesday;
-  @override
-  bool get isThursday;
-  @override
-  bool get isFriday;
-  @override
-  bool get isSaturday;
-  @override
-  bool get isSunday;
-
-  /// Create a copy of DutyDay
-  /// with the given fields replaced by the non-null parameter values.
-  @override
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$DutyDayImplCopyWith<_$DutyDayImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DutyDay&&(identical(other.scheduleId, scheduleId) || other.scheduleId == scheduleId)&&(identical(other.isMonday, isMonday) || other.isMonday == isMonday)&&(identical(other.isTuesday, isTuesday) || other.isTuesday == isTuesday)&&(identical(other.isWednesday, isWednesday) || other.isWednesday == isWednesday)&&(identical(other.isThursday, isThursday) || other.isThursday == isThursday)&&(identical(other.isFriday, isFriday) || other.isFriday == isFriday)&&(identical(other.isSaturday, isSaturday) || other.isSaturday == isSaturday)&&(identical(other.isSunday, isSunday) || other.isSunday == isSunday));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,scheduleId,isMonday,isTuesday,isWednesday,isThursday,isFriday,isSaturday,isSunday);
+
+@override
+String toString() {
+  return 'DutyDay(scheduleId: $scheduleId, isMonday: $isMonday, isTuesday: $isTuesday, isWednesday: $isWednesday, isThursday: $isThursday, isFriday: $isFriday, isSaturday: $isSaturday, isSunday: $isSunday)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DutyDayCopyWith<$Res> implements $DutyDayCopyWith<$Res> {
+  factory _$DutyDayCopyWith(_DutyDay value, $Res Function(_DutyDay) _then) = __$DutyDayCopyWithImpl;
+@override @useResult
+$Res call({
+ int scheduleId, bool isMonday, bool isTuesday, bool isWednesday, bool isThursday, bool isFriday, bool isSaturday, bool isSunday
+});
+
+
+
+
+}
+/// @nodoc
+class __$DutyDayCopyWithImpl<$Res>
+    implements _$DutyDayCopyWith<$Res> {
+  __$DutyDayCopyWithImpl(this._self, this._then);
+
+  final _DutyDay _self;
+  final $Res Function(_DutyDay) _then;
+
+/// Create a copy of DutyDay
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scheduleId = null,Object? isMonday = null,Object? isTuesday = null,Object? isWednesday = null,Object? isThursday = null,Object? isFriday = null,Object? isSaturday = null,Object? isSunday = null,}) {
+  return _then(_DutyDay(
+scheduleId: null == scheduleId ? _self.scheduleId : scheduleId // ignore: cast_nullable_to_non_nullable
+as int,isMonday: null == isMonday ? _self.isMonday : isMonday // ignore: cast_nullable_to_non_nullable
+as bool,isTuesday: null == isTuesday ? _self.isTuesday : isTuesday // ignore: cast_nullable_to_non_nullable
+as bool,isWednesday: null == isWednesday ? _self.isWednesday : isWednesday // ignore: cast_nullable_to_non_nullable
+as bool,isThursday: null == isThursday ? _self.isThursday : isThursday // ignore: cast_nullable_to_non_nullable
+as bool,isFriday: null == isFriday ? _self.isFriday : isFriday // ignore: cast_nullable_to_non_nullable
+as bool,isSaturday: null == isSaturday ? _self.isSaturday : isSaturday // ignore: cast_nullable_to_non_nullable
+as bool,isSunday: null == isSunday ? _self.isSunday : isSunday // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+// dart format on

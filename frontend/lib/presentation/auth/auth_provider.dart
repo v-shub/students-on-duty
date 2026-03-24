@@ -27,11 +27,12 @@ class AuthState {
   }
 }
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  final Ref ref;
-
-  AuthNotifier(this.ref) : super(AuthState.initial()) {
-    _checkCurrentUser();
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() {
+    // Проверяем текущего пользователя после инициализации
+    Future.microtask(() => _checkCurrentUser());
+    return AuthState.initial();
   }
 
   ApiClient get _apiClient => ref.read(apiClientProvider);
@@ -78,8 +79,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> requestCode({String? email, String? phone}) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-      final response = await _apiClient.requestCode(email: email, phone: phone);
-      // Даже если пользователь уже существует, мы продолжаем (для входа)
+            // Даже если пользователь уже существует, продолжаем (для входа)
+      await _apiClient.requestCode(email: email, phone: phone);
       state = state.copyWith(status: AuthStatus.unauthenticated);
       return true;
     } catch (e) {
@@ -165,6 +166,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref);
-});
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);

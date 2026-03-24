@@ -6,18 +6,16 @@ part of 'student.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$StudentImpl _$$StudentImplFromJson(Map<String, dynamic> json) =>
-    _$StudentImpl(
-      id: (json['id'] as num).toInt(),
-      name: json['name'] as String,
-      isActive: json['isActive'] as bool? ?? true,
-      dutyScore: (json['dutyScore'] as num?)?.toInt() ?? 0,
-    );
+_Student _$StudentFromJson(Map<String, dynamic> json) => _Student(
+  id: (json['id'] as num).toInt(),
+  name: json['name'] as String,
+  isActive: json['is_active'] as bool? ?? true,
+  dutyScore: (json['duty_score'] as num?)?.toInt() ?? 0,
+);
 
-Map<String, dynamic> _$$StudentImplToJson(_$StudentImpl instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'isActive': instance.isActive,
-      'dutyScore': instance.dutyScore,
-    };
+Map<String, dynamic> _$StudentToJson(_Student instance) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'is_active': instance.isActive,
+  'duty_score': instance.dutyScore,
+};

@@ -24,7 +24,7 @@ part 'api_client.g.dart';
 part 'api_client.freezed.dart';
 
 @riverpod
-ApiClient apiClient(ApiClientRef ref) {
+ApiClient apiClient(Ref ref) {
   final tokenStorage = ref.watch(tokenStorageProvider);
   return ApiClient(tokenStorage);
 }
@@ -472,10 +472,10 @@ class ApiClient {
 }
 
 @freezed
-class AuthResponse with _$AuthResponse {
+abstract class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
-    required String accessToken,
-    required String refreshToken,
+    @JsonKey(name: 'access_token') required String accessToken,
+    @JsonKey(name: 'refresh_token') required String refreshToken,
   }) = _AuthResponse;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
@@ -483,10 +483,10 @@ class AuthResponse with _$AuthResponse {
 }
 
 @freezed
-class RefreshResponse with _$RefreshResponse {
+abstract class RefreshResponse with _$RefreshResponse {
   const factory RefreshResponse({
-    required String accessToken,
-    required String refreshToken,
+    @JsonKey(name: 'access_token') required String accessToken,
+    @JsonKey(name: 'refresh_token') required String refreshToken,
   }) = _RefreshResponse;
 
   factory RefreshResponse.fromJson(Map<String, dynamic> json) =>

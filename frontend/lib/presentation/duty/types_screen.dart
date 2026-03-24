@@ -1,63 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_type.dart';
-import 'package:frontend/presentation/duty/types_provider.dart';
+import 'package:frontend/presentation/duty/duty_types_provider.dart';
 
 class DutyTypesScreen extends ConsumerWidget {
   const DutyTypesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final typesAsync = ref.watch(dutyTypeProvider);
+    final typesAsync = ref.watch(dutyTypesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Типы дежурств')),
-      body: typesAsync.when(
+            body: typesAsync.when(
         data: (types) {
-          // Разделим системные и пользовательские
-          final systemTypes = types
-              .where((t) => t.id <= 10)
-              .toList(); // пример: системные имеют id <= 10
-          final userTypes = types.where((t) => t.id > 10).toList();
-
-          return ListView(
-            children: [
-              if (systemTypes.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Системные',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                ...systemTypes.map(
-                  (type) => _buildTypeTile(context, ref, type, isSystem: true),
-                ),
-              ],
-              if (userTypes.isNotEmpty) ...[
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text(
-                    'Мои типы',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                ...userTypes.map(
-                  (type) => _buildTypeTile(context, ref, type, isSystem: false),
-                ),
-              ],
-              if (types.isEmpty)
-                const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: Text('Нет типов дежурств'),
-                  ),
-                ),
-            ],
+          if (types.isEmpty) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: Text('Нет типов дежурств'),
+              ),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.read(dutyTypesProvider.notifier).reload(),
+            child: ListView.builder(
+              itemCount: types.length,
+              itemBuilder: (ctx, i) =>
+                  _buildTypeTile(context, ref, types[i]),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Ошибка: $error')),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Ошибка: $error'),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () =>
+                    ref.read(dutyTypesProvider.notifier).reload(),
+                child: const Text('Повторить'),
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateEditDialog(context, ref),
@@ -66,12 +55,11 @@ class DutyTypesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTypeTile(
+    Widget _buildTypeTile(
     BuildContext context,
     WidgetRef ref,
-    DutyType type, {
-    required bool isSystem,
-  }) {
+    DutyType type,
+  ) {
     return ListTile(
       title: Text(type.name),
       subtitle: type.description != null ? Text(type.description!) : null,
@@ -79,16 +67,14 @@ class DutyTypesScreen extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('${type.defaultScore} очков'),
-          if (!isSystem) ...[
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _showCreateEditDialog(context, ref, type: type),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => _deleteType(context, ref, type.id),
-            ),
-          ],
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showCreateEditDialog(context, ref, type: type),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _deleteType(context, ref, type.id),
+          ),
         ],
       ),
     );
@@ -156,18 +142,19 @@ class DutyTypesScreen extends ConsumerWidget {
 
               bool success;
               if (type == null) {
-                success = await ref
-                    .read(dutyTypeProvider.notifier)
+                              success = await ref
+                    .read(dutyTypesProvider.notifier)
                     .createType(name, score, description: desc);
-              } else {
+                            } else {
                 success = await ref
-                    .read(dutyTypeProvider.notifier)
+                    .read(dutyTypesProvider.notifier)
                     .updateType(type.id, name, score, description: desc);
               }
 
+                            if (!ctx.mounted) return;
               Navigator.pop(ctx);
-              if (!success && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
+              if (!success && ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(content: Text('Ошибка сохранения')),
                 );
               }
@@ -179,7 +166,7 @@ class DutyTypesScreen extends ConsumerWidget {
     );
   }
 
-  void _deleteType(BuildContext context, WidgetRef ref, int id) async {
+    void _deleteType(BuildContext context, WidgetRef ref, int id) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -199,8 +186,9 @@ class DutyTypesScreen extends ConsumerWidget {
       ),
     );
     if (confirm != true) return;
+    if (!context.mounted) return;
 
-    final success = await ref.read(dutyTypeProvider.notifier).deleteType(id);
+    final success = await ref.read(dutyTypesProvider.notifier).deleteType(id);
     if (!success && context.mounted) {
       ScaffoldMessenger.of(
         context,

@@ -1,34 +1,62 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_day.dart';
+import 'package:frontend/data/models/dto/update_duty_day_dto.dart';
+import 'package:frontend/data/services/api_client.dart';
 
-final _daysStorage = <int, DutyDay>{};
+/// Провайдер дней дежурств для конкретного расписания — данные из API
+class DutyDayNotifier extends AsyncNotifier<DutyDay?> {
+  final int _scheduleId;
 
-class DutyDaysNotifier extends StateNotifier<Map<int, DutyDay>> {
-  DutyDaysNotifier() : super(_daysStorage);
+  DutyDayNotifier(this._scheduleId);
 
-  DutyDay getForSchedule(int scheduleId) {
-    return state[scheduleId] ?? DutyDay(scheduleId: scheduleId);
+  @override
+  Future<DutyDay?> build() async {
+    try {
+      return await ref
+          .read(apiClientProvider)
+          .getDutyDaysBySchedule(_scheduleId);
+    } catch (e) {
+      // Если дни не найдены — возвращаем null (не ошибка)
+      return null;
+    }
   }
+
+  /// Обновить дни через API
+  Future<bool> updateDays(DutyDay days) async {
+    try {
+      final dto = UpdateDutyDayDto(
+        isMonday: days.isMonday,
+        isTuesday: days.isTuesday,
+        isWednesday: days.isWednesday,
+        isThursday: days.isThursday,
+        isFriday: days.isFriday,
+        isSaturday: days.isSaturday,
+        isSunday: days.isSunday,
+      );
+      final updated = await ref
+          .read(apiClientProvider)
+          .updateDutyDay(_scheduleId, dto);
+      state = AsyncValue.data(updated);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+final dutyDayProvider =
+    AsyncNotifierProvider.family<DutyDayNotifier, DutyDay?, int>(
+      (arg) => DutyDayNotifier(arg),
+    );
+
+// Обратная совместимость: провайдер кэша всех дней (заполняется при загрузке расписаний)
+// Используется в GroupSchedulesTab для отображения дней без дополнительных запросов
+class DutyDaysCacheNotifier extends Notifier<Map<int, DutyDay>> {
+  @override
+  Map<int, DutyDay> build() => {};
 
   void setDays(int scheduleId, DutyDay days) {
-    // Убедимся, что scheduleId правильный
-    final correctedDays = days.copyWith(scheduleId: scheduleId);
-    state = {...state, scheduleId: correctedDays};
-  }
-
-  void updateDays(int scheduleId, DutyDay updated) {
-    final current = state[scheduleId] ?? DutyDay(scheduleId: scheduleId);
-    final merged = DutyDay(
-      scheduleId: scheduleId,
-      isMonday: updated.isMonday ?? current.isMonday,
-      isTuesday: updated.isTuesday ?? current.isTuesday,
-      isWednesday: updated.isWednesday ?? current.isWednesday,
-      isThursday: updated.isThursday ?? current.isThursday,
-      isFriday: updated.isFriday ?? current.isFriday,
-      isSaturday: updated.isSaturday ?? current.isSaturday,
-      isSunday: updated.isSunday ?? current.isSunday,
-    );
-    state = {...state, scheduleId: merged};
+    state = {...state, scheduleId: days.copyWith(scheduleId: scheduleId)};
   }
 
   void removeDays(int scheduleId) {
@@ -39,6 +67,6 @@ class DutyDaysNotifier extends StateNotifier<Map<int, DutyDay>> {
 }
 
 final dutyDaysProvider =
-    StateNotifierProvider<DutyDaysNotifier, Map<int, DutyDay>>((ref) {
-      return DutyDaysNotifier();
-    });
+    NotifierProvider<DutyDaysCacheNotifier, Map<int, DutyDay>>(
+      DutyDaysCacheNotifier.new,
+    );

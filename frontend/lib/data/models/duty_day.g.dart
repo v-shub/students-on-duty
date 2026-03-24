@@ -6,26 +6,24 @@ part of 'duty_day.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$DutyDayImpl _$$DutyDayImplFromJson(Map<String, dynamic> json) =>
-    _$DutyDayImpl(
-      scheduleId: (json['scheduleId'] as num).toInt(),
-      isMonday: json['isMonday'] as bool? ?? false,
-      isTuesday: json['isTuesday'] as bool? ?? false,
-      isWednesday: json['isWednesday'] as bool? ?? false,
-      isThursday: json['isThursday'] as bool? ?? false,
-      isFriday: json['isFriday'] as bool? ?? false,
-      isSaturday: json['isSaturday'] as bool? ?? false,
-      isSunday: json['isSunday'] as bool? ?? false,
-    );
+_DutyDay _$DutyDayFromJson(Map<String, dynamic> json) => _DutyDay(
+  scheduleId: (json['schedule_id'] as num).toInt(),
+  isMonday: json['is_monday'] as bool? ?? false,
+  isTuesday: json['is_tuesday'] as bool? ?? false,
+  isWednesday: json['is_wednesday'] as bool? ?? false,
+  isThursday: json['is_thursday'] as bool? ?? false,
+  isFriday: json['is_friday'] as bool? ?? false,
+  isSaturday: json['is_saturday'] as bool? ?? false,
+  isSunday: json['is_sunday'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$$DutyDayImplToJson(_$DutyDayImpl instance) =>
-    <String, dynamic>{
-      'scheduleId': instance.scheduleId,
-      'isMonday': instance.isMonday,
-      'isTuesday': instance.isTuesday,
-      'isWednesday': instance.isWednesday,
-      'isThursday': instance.isThursday,
-      'isFriday': instance.isFriday,
-      'isSaturday': instance.isSaturday,
-      'isSunday': instance.isSunday,
-    };
+Map<String, dynamic> _$DutyDayToJson(_DutyDay instance) => <String, dynamic>{
+  'schedule_id': instance.scheduleId,
+  'is_monday': instance.isMonday,
+  'is_tuesday': instance.isTuesday,
+  'is_wednesday': instance.isWednesday,
+  'is_thursday': instance.isThursday,
+  'is_friday': instance.isFriday,
+  'is_saturday': instance.isSaturday,
+  'is_sunday': instance.isSunday,
+};

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/data/models/duty_day.dart';
 import 'package:frontend/presentation/duty/duty_types_provider.dart';
 import 'package:frontend/presentation/schedules/schedules_provider.dart';
-import 'package:frontend/presentation/schedules/duty_days_provider.dart';
 
 class CreateScheduleScreen extends ConsumerStatefulWidget {
   final int groupId;
@@ -31,104 +30,133 @@ class _CreateScheduleScreenState extends ConsumerState<CreateScheduleScreen> {
   bool _saturday = false;
   bool _sunday = false;
 
-  @override
+    @override
   Widget build(BuildContext context) {
-    final dutyTypes = ref.watch(dutyTypesProvider); // просто список, не Future
+    // Получаем типы дежурств из API через AsyncNotifierProvider
+    final dutyTypesAsync = ref.watch(dutyTypesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Создать расписание')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            DropdownButtonFormField<int>(
-              value: _selectedDutyTypeId,
-              decoration: const InputDecoration(labelText: 'Тип дежурства'),
-              items: dutyTypes.map((type) {
-                return DropdownMenuItem(
-                  value: type.id,
-                  child: Text('${type.name} (${type.defaultScore} очков)'),
-                );
-              }).toList(),
-              onChanged: (val) => setState(() => _selectedDutyTypeId = val),
-              validator: (val) => val == null ? 'Выберите тип' : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Text('Студентов в день:'),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Slider(
-                    value: _studentsPerDay.toDouble(),
-                    min: 1,
-                    max: 5,
-                    divisions: 4,
-                    onChanged: (val) =>
-                        setState(() => _studentsPerDay = val.round()),
+      body: dutyTypesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Ошибка загрузки типов дежурств: $e'),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () =>
+                    ref.read(dutyTypesProvider.notifier).reload(),
+                child: const Text('Повторить'),
+              ),
+            ],
+          ),
+        ),
+        data: (dutyTypes) => Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              DropdownButtonFormField<int>(
+                value: _selectedDutyTypeId,
+                decoration:
+                    const InputDecoration(labelText: 'Тип дежурства'),
+                items: dutyTypes.map((type) {
+                  return DropdownMenuItem<int>(
+                    value: type.id,
+                    child: Text(
+                      '${type.name} (${type.defaultScore} очков)',
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) =>
+                    setState(() => _selectedDutyTypeId = val),
+                validator: (val) =>
+                    val == null ? 'Выберите тип' : null,
+              ),
+                          const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Text('Студентов в день:'),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Slider(
+                      value: _studentsPerDay.toDouble(),
+                      min: 1,
+                      max: 5,
+                      divisions: 4,
+                      onChanged: (val) =>
+                          setState(() => _studentsPerDay = val.round()),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text('$_studentsPerDay'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ListTile(
-              title: const Text('Дата начала'),
-              subtitle: Text(_startDate.toLocal().toString().split(' ')[0]),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: () async {
-                final date = await showDatePicker(
-                  context: context,
-                  initialDate: _startDate,
-                  firstDate: DateTime.now(),
-                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                );
-                if (date != null) setState(() => _startDate = date);
-              },
-            ),
-            CheckboxListTile(
-              title: const Text('Установить дату окончания'),
-              value: _endDate != null,
-              onChanged: (val) {
-                setState(() {
-                  _endDate = val == true
-                      ? _startDate.add(const Duration(days: 7))
-                      : null;
-                });
-              },
-            ),
-            if (_endDate != null)
+                  const SizedBox(width: 8),
+                  Text('$_studentsPerDay'),
+                ],
+              ),
+                          const SizedBox(height: 16),
               ListTile(
-                title: const Text('Дата окончания'),
-                subtitle: Text(_endDate!.toLocal().toString().split(' ')[0]),
+                title: const Text('Дата начала'),
+                              subtitle:
+                    Text(_startDate.toLocal().toString().split(' ')[0]),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
                   final date = await showDatePicker(
                     context: context,
-                    initialDate: _endDate!,
-                    firstDate: _startDate,
-                    lastDate: _startDate.add(const Duration(days: 365)),
+                    initialDate: _startDate,
+                    firstDate: DateTime.now(),
+                    lastDate:
+                        DateTime.now().add(const Duration(days: 365)),
                   );
-                  if (date != null) setState(() => _endDate = date);
+                  if (date != null) setState(() => _startDate = date);
                 },
               ),
-            const SizedBox(height: 16),
-            const Text(
-              'Дни дежурств:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            ..._buildWeekDays(),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
+              CheckboxListTile(
+                title: const Text('Установить дату окончания'),
+                value: _endDate != null,
+                onChanged: (val) {
+                  setState(() {
+                    _endDate = val == true
+                        ? _startDate.add(const Duration(days: 7))
+                        : null;
+                  });
+                },
               ),
-              child: const Text('Создать расписание'),
-            ),
-          ],
+              if (_endDate != null)
+                ListTile(
+                  title: const Text('Дата окончания'),
+                  subtitle: Text(
+                    _endDate!.toLocal().toString().split(' ')[0],
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _endDate!,
+                      firstDate: _startDate,
+                      lastDate:
+                          _startDate.add(const Duration(days: 365)),
+                    );
+                    if (date != null) setState(() => _endDate = date);
+                  },
+                ),
+              const SizedBox(height: 16),
+              const Text(
+                'Дни дежурств:',
+                style:
+                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              ..._buildWeekDays(),
+                          const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+                child: const Text('Создать расписание'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -164,12 +192,12 @@ class _CreateScheduleScreenState extends ConsumerState<CreateScheduleScreen> {
     );
   }
 
-  Future<void> _submit() async {
+    Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedDutyTypeId == null) return;
 
     final days = DutyDay(
-      scheduleId: 0, // будет заменено при создании
+      scheduleId: 0, // будет заменено сервером
       isMonday: _monday,
       isTuesday: _tuesday,
       isWednesday: _wednesday,
@@ -179,7 +207,7 @@ class _CreateScheduleScreenState extends ConsumerState<CreateScheduleScreen> {
       isSunday: _sunday,
     );
 
-    await ref
+    final created = await ref
         .read(groupSchedulesProvider(widget.groupId).notifier)
         .createSchedule(
           dutyTypeId: _selectedDutyTypeId!,
@@ -190,10 +218,16 @@ class _CreateScheduleScreenState extends ConsumerState<CreateScheduleScreen> {
         );
 
     if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Расписание создано')));
-      Navigator.pop(context);
+      if (created != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Расписание создано')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось создать расписание')),
+        );
+      }
     }
   }
 }
