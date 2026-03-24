@@ -34,12 +34,17 @@ export class DutySchedulesService {
     if (!dt) throw new NotFoundException('Тип дежурства не найден');
   }
 
-  /** Получить расписание и проверить владельца */
+    /** Получить расписание и проверить владельца */
   async findOneOwned(userId: number, id: number): Promise<DutySchedule> {
-    const schedule = await this.repo.findOne({
-      where: { id },
-      relations: ['group', 'duty_type', 'duty_days'],
-    });
+    // createQueryBuilder вместо findOne+relations — один запрос, не открывает
+    // дополнительных соединений из пула (избегаем Connection terminated на облачной БД)
+    const schedule = await this.repo
+      .createQueryBuilder('s')
+      .innerJoinAndSelect('s.group', 'g')
+      .leftJoinAndSelect('s.duty_type', 'dt')
+      .leftJoinAndSelect('s.duty_days', 'dd')
+      .where('s.id = :id', { id })
+      .getOne();
     if (!schedule) throw new NotFoundException('Расписание не найдено');
     if (schedule.group.user_id !== userId) throw new ForbiddenException();
     return schedule;
@@ -63,20 +68,28 @@ export class DutySchedulesService {
     // Создаём duty_days отдельно
     await this.dutyDayRepo.insert({ ...dto.duty_days, schedule_id: scheduleId });
 
-    return this.repo.findOneOrFail({
-      where: { id: scheduleId },
-      relations: ['duty_days', 'duty_type', 'group'],
-    });
+        // createQueryBuilder — один запрос без лишних SELECT через пул
+    const created = await this.repo
+      .createQueryBuilder('s')
+      .innerJoinAndSelect('s.group', 'g')
+      .leftJoinAndSelect('s.duty_type', 'dt')
+      .leftJoinAndSelect('s.duty_days', 'dd')
+      .where('s.id = :id', { id: scheduleId })
+      .getOne();
+    if (!created) throw new NotFoundException('Расписание не найдено после создания');
+    return created;
   }
 
-  /** Все расписания пользователя (через его группы) */
+    /** Все расписания пользователя (через его группы) */
   async findAll(userId: number): Promise<DutySchedule[]> {
+    // Один алиас 'grp' для relation group — нельзя joinить одно relation дважды
+    // Фильтрация по владельцу через WHERE вместо двойного JOIN
     return this.repo
       .createQueryBuilder('s')
-      .innerJoin('s.group', 'g', 'g.user_id = :userId', { userId })
+      .leftJoinAndSelect('s.group', 'grp')
       .leftJoinAndSelect('s.duty_days', 'dd')
       .leftJoinAndSelect('s.duty_type', 'dt')
-      .leftJoinAndSelect('s.group', 'grp')
+      .where('grp.user_id = :userId', { userId })
       .getMany();
   }
 
@@ -99,10 +112,16 @@ export class DutySchedulesService {
       await this.dutyDayRepo.update({ schedule_id: id }, duty_days);
     }
 
-    return this.repo.findOneOrFail({
-      where: { id },
-      relations: ['duty_days', 'duty_type', 'group'],
-    });
+        // createQueryBuilder — один запрос без лишних SELECT через пул
+    const updated = await this.repo
+      .createQueryBuilder('s')
+      .innerJoinAndSelect('s.group', 'g')
+      .leftJoinAndSelect('s.duty_type', 'dt')
+      .leftJoinAndSelect('s.duty_days', 'dd')
+      .where('s.id = :id', { id })
+      .getOne();
+    if (!updated) throw new NotFoundException('Расписание не найдено после обновления');
+    return updated;
   }
 
   async remove(userId: number, id: number): Promise<void> {

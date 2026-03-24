@@ -29,21 +29,47 @@ export class StudentsGroupsService {
     if (!student) throw new NotFoundException('Студент не найден');
   }
 
-  /** Добавить студента в группу */
+    /** Добавить студента в группу */
   async addStudent(userId: number, groupId: number, studentId: number): Promise<StudentsGroup> {
     await this.assertOwnership(userId, groupId, studentId);
-    const exists = await this.repo.findOne({ where: { group_id: groupId, student_id: studentId } });
+    // createQueryBuilder вместо findOne — не открывает лишних соединений из пула
+    const exists = await this.repo
+      .createQueryBuilder('sg')
+      .where('sg.group_id = :groupId', { groupId })
+      .andWhere('sg.student_id = :studentId', { studentId })
+      .getOne();
     if (exists) throw new ConflictException('Студент уже в группе');
-            await this.repo.insert({ group_id: groupId, student_id: studentId });
-    return this.repo.findOneOrFail({ where: { group_id: groupId, student_id: studentId } });
+    // insert() вместо save() — не делает лишний SELECT
+    await this.repo
+      .createQueryBuilder()
+      .insert()
+      .into(StudentsGroup)
+      .values({ group_id: groupId, student_id: studentId })
+      .execute();
+    // Один финальный SELECT вместо findOneOrFail
+    const result = await this.repo
+      .createQueryBuilder('sg')
+      .where('sg.group_id = :groupId', { groupId })
+      .andWhere('sg.student_id = :studentId', { studentId })
+      .getOne();
+    if (!result) throw new NotFoundException('Связь не найдена после создания');
+    return result;
   }
 
-  /** Список студентов группы */
+    /** Список студентов группы */
   async findStudents(userId: number, groupId: number): Promise<StudentsGroup[]> {
-    const group = await this.groupRepo.findOne({ where: { id: groupId } });
+    // createQueryBuilder вместо findOne+find+relations — один запрос без лишних соединений
+    const group = await this.groupRepo
+      .createQueryBuilder('g')
+      .where('g.id = :groupId', { groupId })
+      .getOne();
     if (!group) throw new NotFoundException('Группа не найдена');
     if (group.user_id !== userId) throw new ForbiddenException();
-    return this.repo.find({ where: { group_id: groupId }, relations: ['student'] });
+    return this.repo
+      .createQueryBuilder('sg')
+      .leftJoinAndSelect('sg.student', 'st')
+      .where('sg.group_id = :groupId', { groupId })
+      .getMany();
   }
 
   /** Удалить студента из группы */

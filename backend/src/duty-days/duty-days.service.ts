@@ -11,15 +11,24 @@ export class DutyDaysService {
     private dutyDaysRepository: Repository<DutyDay>,
   ) {}
 
-  async create(createDutyDayDto: CreateDutyDayDto): Promise<DutyDay> {
-    const dutyDay = this.dutyDaysRepository.create(createDutyDayDto);
-    return this.dutyDaysRepository.save(dutyDay);
+    async create(createDutyDayDto: CreateDutyDayDto): Promise<DutyDay> {
+    // insert() не делает лишний SELECT в отличие от save()
+    const result = await this.dutyDaysRepository
+      .createQueryBuilder()
+      .insert()
+      .into(DutyDay)
+      .values(createDutyDayDto)
+      .returning('*')
+      .execute();
+    return result.generatedMaps[0] as DutyDay;
   }
 
-  async findAll(userId: number, query: FindDutyDaysDto): Promise<DutyDay[]> {
+    async findAll(userId: number, query: FindDutyDaysDto): Promise<DutyDay[]> {
     // Строим запрос с проверкой принадлежности пользователю
+    // select('duty_day') обязателен при использовании innerJoin без andSelect
     const qb = this.dutyDaysRepository
       .createQueryBuilder('duty_day')
+      .select('duty_day')
       .innerJoin('duty_day.schedule', 'schedule')
       .innerJoin('schedule.group', 'group')
       .where('group.user_id = :userId', { userId });
@@ -60,24 +69,28 @@ export class DutyDaysService {
     return qb.getMany();
   }
 
-  async findOne(scheduleId: number): Promise<DutyDay> {
-    const dutyDay = await this.dutyDaysRepository.findOne({ 
-      where: { schedule_id: scheduleId } 
-    });
-    
+    async findOne(scheduleId: number): Promise<DutyDay> {
+    // createQueryBuilder вместо findOne — не открывает дополнительных соединений
+    // из пула (избегаем Connection terminated на облачной БД)
+    const dutyDay = await this.dutyDaysRepository
+      .createQueryBuilder('dd')
+      .where('dd.schedule_id = :scheduleId', { scheduleId })
+      .getOne();
+
     if (!dutyDay) {
       throw new NotFoundException(`Дни дежурства для расписания ${scheduleId} не найдены`);
     }
-    
+
     return dutyDay;
   }
 
-  async update(scheduleId: number, updateDutyDayDto: UpdateDutyDayDto): Promise<DutyDay> {
-    await this.dutyDaysRepository.update(
-      { schedule_id: scheduleId }, 
-      updateDutyDayDto
+      async update(scheduleId: number, updateDutyDayDto: UpdateDutyDayDto): Promise<DutyDay> {
+    // Фильтруем undefined-поля вручную — update() их пропускает
+    const fields = Object.fromEntries(
+      Object.entries(updateDutyDayDto).filter(([, v]) => v !== undefined),
     );
-    
+    // update() без лишнего SELECT, в отличие от save()
+    await this.dutyDaysRepository.update({ schedule_id: scheduleId }, fields);
     return this.findOne(scheduleId);
   }
 

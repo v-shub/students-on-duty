@@ -11,10 +11,17 @@ export class GroupsService {
     private readonly repo: Repository<Group>,
   ) {}
 
-  /** Создать группу для текущего пользователя */
+    /** Создать группу для текущего пользователя */
     async create(userId: number, dto: CreateGroupDto): Promise<Group> {
     const result = await this.repo.insert({ ...dto, user_id: userId });
-    return this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
+    const id = result.identifiers[0].id;
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const created = await this.repo
+      .createQueryBuilder('g')
+      .where('g.id = :id', { id })
+      .getOne();
+    if (!created) throw new NotFoundException('Группа не найдена после создания');
+    return created;
   }
 
   /** Получить все группы текущего пользователя */
@@ -30,10 +37,16 @@ export class GroupsService {
     return group;
   }
 
-    async update(userId: number, id: number, dto: UpdateGroupDto): Promise<Group> {
+        async update(userId: number, id: number, dto: UpdateGroupDto): Promise<Group> {
     await this.findOne(userId, id);
     await this.repo.update(id, dto);
-    return this.repo.findOneOrFail({ where: { id } });
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const updated = await this.repo
+      .createQueryBuilder('g')
+      .where('g.id = :id', { id })
+      .getOne();
+    if (!updated) throw new NotFoundException('Группа не найдена после обновления');
+    return updated;
   }
 
   async remove(userId: number, id: number): Promise<void> {

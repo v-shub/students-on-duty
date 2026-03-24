@@ -1,7 +1,6 @@
 import { 
   Controller, Get, Post, Put, Delete, Body, Param, 
-  Query, UseGuards, ParseIntPipe, NotFoundException, 
-  ForbiddenException, HttpCode 
+  Query, UseGuards, ParseIntPipe, HttpCode 
 } from '@nestjs/common';
 import { 
   ApiTags, ApiOperation, ApiResponse, ApiParam, 
@@ -32,20 +31,12 @@ export class DutyDaysController {
   @ApiResponse({ status: 403, description: 'Доступ запрещен - расписание не принадлежит пользователю' })
   @ApiResponse({ status: 404, description: 'Расписание не найдено' })
   @ApiBody({ type: CreateDutyDayDto })
-  async create(
+    async create(
     @CurrentUser() userId: number,
     @Body() createDutyDayDto: CreateDutyDayDto
   ) {
-    // Проверяем, что расписание принадлежит текущему пользователю
-    const schedule = await this.dutySchedulesService.findOne(
-      userId, 
-      createDutyDayDto.schedule_id
-    );
-    
-    if (!schedule) {
-      throw new NotFoundException('Расписание не найдено');
-    }
-    
+    // Проверяем доступ — сервис сам бросает NotFoundException / ForbiddenException
+    await this.dutySchedulesService.findOne(userId, createDutyDayDto.schedule_id);
     return this.dutyDaysService.create(createDutyDayDto);
   }
 
@@ -123,20 +114,12 @@ export class DutyDaysController {
     await this.dutyDaysService.remove(id);
   }
 
-  /**
-   * Вспомогательный метод для проверки доступа к расписанию
+    /**
+   * Вспомогательный метод для проверки доступа к расписанию.
+   * DutySchedulesService.findOne сам бросает NotFoundException или ForbiddenException —
+   * пробрасываем их без перехвата.
    */
   private async checkScheduleAccess(userId: number, scheduleId: number): Promise<void> {
-    try {
-      const schedule = await this.dutySchedulesService.findOne(userId, scheduleId);
-      if (!schedule) {
-        throw new NotFoundException('Расписание не найдено');
-      }
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new ForbiddenException('Доступ к расписанию запрещен');
-    }
+    await this.dutySchedulesService.findOne(userId, scheduleId);
   }
 }

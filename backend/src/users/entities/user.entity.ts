@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Group } from '../../groups/entities/group.entity';
 
@@ -8,19 +8,16 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty()
-  @Column({ length: 100 })
-  @Index({ unique: true })
+      @ApiProperty()
+  @Column({ length: 100, unique: true })
   username: string;
 
   @ApiProperty({ required: false })
-  @Column({ length: 255, nullable: true })
-  @Index({ unique: true })
+  @Column({ length: 255, nullable: true, unique: true })
   email?: string;
 
-    @ApiProperty({ required: false })
-  @Column({ type: 'char', length: 11, nullable: true })
-  @Index({ unique: true })
+  @ApiProperty({ required: false })
+  @Column({ type: 'char', length: 11, nullable: true, unique: true })
   phone?: string;
 
   @Column({ length: 255 })

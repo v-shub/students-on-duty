@@ -6,7 +6,7 @@ import { DutyEvent } from './entities/duty-event.entity';
 import { DutySchedule } from '../duty-schedules/entities/duty-schedule.entity';
 import { DutyDay } from '../duty-days/entities/duty-day.entity';
 import { Student } from '../students/entities/student.entity';
-import { StudentsGroup } from '../students-groups/entities/students-group.entity';
+
 import { Absence } from '../absences/entities/absence.entity';
 import { Group } from '../groups/entities/group.entity';
 import { AuthModule } from '../auth/auth.module';
@@ -18,8 +18,7 @@ import { AbsencesModule } from '../absences/absences.module';
       DutyEvent,
       DutySchedule,
       DutyDay,
-      Student,
-      StudentsGroup,
+            Student,
       Absence,
       Group,
     ]),

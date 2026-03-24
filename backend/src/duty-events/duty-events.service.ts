@@ -3,14 +3,14 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { Repository, In, DataSource } from 'typeorm';
 import { DutyEvent } from './entities/duty-event.entity';
 import { DutySchedule } from '../duty-schedules/entities/duty-schedule.entity';
 import { DutyDay } from '../duty-days/entities/duty-day.entity';
 import { Student } from '../students/entities/student.entity';
-import { StudentsGroup } from '../students-groups/entities/students-group.entity';
 import { Absence } from '../absences/entities/absence.entity';
 import { Group } from '../groups/entities/group.entity';
 import { UpdateDutyEventDto } from './dto/duty-event.dto';
@@ -28,6 +28,8 @@ const DOW_FIELD: Record<number, keyof DutyDay> = {
 
 @Injectable()
 export class DutyEventsService {
+  private readonly logger = new Logger(DutyEventsService.name);
+
   constructor(
     @InjectRepository(DutyEvent)
     private readonly eventRepo: Repository<DutyEvent>,
@@ -35,8 +37,6 @@ export class DutyEventsService {
     private readonly scheduleRepo: Repository<DutySchedule>,
     @InjectRepository(Student)
     private readonly studentRepo: Repository<Student>,
-    @InjectRepository(StudentsGroup)
-    private readonly sgRepo: Repository<StudentsGroup>,
     @InjectRepository(Absence)
     private readonly absenceRepo: Repository<Absence>,
     @InjectRepository(Group)
@@ -47,67 +47,72 @@ export class DutyEventsService {
   // ─── Вспомогательные методы ───────────────────────────────────────────────
 
   private async assertScheduleOwner(userId: number, scheduleId: number): Promise<DutySchedule> {
-    const schedule = await this.scheduleRepo.findOne({
-      where: { id: scheduleId },
-      relations: ['group', 'duty_type', 'duty_days'],
-    });
+    const schedule = await this.scheduleRepo
+      .createQueryBuilder('s')
+      .innerJoinAndSelect('s.group', 'g')
+      .innerJoinAndSelect('s.duty_type', 'dt')
+      .leftJoinAndSelect('s.duty_days', 'dd')
+      .where('s.id = :scheduleId', { scheduleId })
+      .getOne();
     if (!schedule) throw new NotFoundException('Расписание не найдено');
     if (schedule.group.user_id !== userId) throw new ForbiddenException();
     return schedule;
   }
 
-      /**
+  /**
    * Загрузить всех активных студентов группы вместе с их отсутствиями на дату.
-   * Исключает студентов, уже имеющих pending-событие в любом расписании группы на эту дату
-   * (один студент — не более одного дежурства в день).
-   * excludeScheduleId — текущее расписание, исключается из проверки занятости
-   * (чтобы повторная генерация/переназначение не блокировали сами себя).
-   * Возвращает два списка: доступные (не отсутствуют, не заняты) и отсутствующие.
    */
   private async loadStudentsWithAbsences(
     groupId: number,
     dateStr: string,
     excludeScheduleId?: number,
   ): Promise<{ available: Student[]; absent: Array<{ student: Student; absence: Absence }> }> {
-    const links = await this.sgRepo.find({
-      where: { group_id: groupId },
-      relations: ['student'],
-    });
-    const active = links.map((l) => l.student).filter((s) => s.is_active);
-
-    if (active.length === 0) throw new BadRequestException('В группе нет активных студентов');
-
-    // Студенты, уже имеющие pending-событие в любом расписании группы на эту дату
-    const busyEventsQb = this.eventRepo
-      .createQueryBuilder('e')
-      .innerJoin('e.schedule', 's', 's.group_id = :groupId', { groupId })
-      .where('e.duty_date = :date', { date: dateStr })
-      .andWhere('e.status = :status', { status: 'pending' })
-      .andWhere('e.student_id IN (:...ids)', { ids: active.map((s) => s.id) });
-
-    if (excludeScheduleId !== undefined) {
-      busyEventsQb.andWhere('e.schedule_id != :excludeScheduleId', { excludeScheduleId });
-    }
-
-    const busyEvents = await busyEventsQb.getMany();
-    const busyStudentIds = new Set(busyEvents.map((e) => e.student_id));
-
-    const absences = await this.absenceRepo
-      .createQueryBuilder('a')
-      .where('a.student_id IN (:...ids)', { ids: active.map((s) => s.id) })
-      .andWhere('a.date_from <= :date', { date: dateStr })
-      .andWhere('a.date_to >= :date', { date: dateStr })
+    const active = await this.studentRepo
+      .createQueryBuilder('st')
+      .innerJoin('st.group_links', 'sg', 'sg.group_id = :groupId', { groupId })
+      .where('st.is_active = true')
       .getMany();
 
+    if (active.length === 0) {
+      throw new BadRequestException('В группе нет активных студентов');
+    }
+
+    const activeIds = active.map((s) => s.id);
+    
+    let busyStudentIds = new Set<number>();
+    if (activeIds.length > 0) {
+      const busyEventsQb = this.eventRepo
+        .createQueryBuilder('e')
+        .select('e.student_id')
+        .where('e.duty_date = :date', { date: dateStr })
+        .andWhere('e.status = :status', { status: 'pending' })
+        .andWhere('e.student_id IN (:...ids)', { ids: activeIds });
+
+      if (excludeScheduleId !== undefined) {
+        busyEventsQb.andWhere('e.schedule_id != :excludeScheduleId', { excludeScheduleId });
+      }
+
+      const busyEvents = await busyEventsQb.getMany();
+      busyStudentIds = new Set(busyEvents.map((e) => e.student_id));
+    }
+
+    let absences: Absence[] = [];
+    if (activeIds.length > 0) {
+      absences = await this.absenceRepo
+        .createQueryBuilder('a')
+        .where('a.student_id IN (:...ids)', { ids: activeIds })
+        .andWhere('a.date_from <= :date', { date: dateStr })
+        .andWhere('a.date_to >= :date', { date: dateStr })
+        .getMany();
+    }
+    
     const absenceByStudentId = new Map<number, Absence>(absences.map((a) => [a.student_id, a]));
 
     const available: Student[] = [];
     const absent: Array<{ student: Student; absence: Absence }> = [];
 
     for (const student of active) {
-      // Студент уже дежурит сегодня по другому расписанию — пропускаем полностью
       if (busyStudentIds.has(student.id)) continue;
-
       const absence = absenceByStudentId.get(student.id);
       if (absence) {
         absent.push({ student, absence });
@@ -120,135 +125,128 @@ export class DutyEventsService {
   }
 
   /**
-   * Назначить студентов на дежурство с учётом отсутствий.
-   *
-   * Алгоритм для каждого из `count` слотов:
-   * 1. Берём студента с наименьшим duty_score из ещё не выбранных (включая отсутствующих).
-   * 2. Если студент отсутствует — создаём событие со статусом `reassigned`,
-   *    применяем штраф (-score) если отсутствие не одобрено,
-   *    затем продолжаем поиск замены среди оставшихся доступных студентов.
-   * 3. Первый доступный студент (не отсутствует) получает статус `pending`.
-   *
-   * Таким образом все студенты (включая отсутствующих) участвуют в очереди по score,
-   * и никто не «пропускает» свою очередь бесплатно без уважительной причины.
+   * Назначить студентов на дежурство - без явной транзакции, с повторными попытками
    */
   private async assignStudents(
-    manager: EntityManager,
     schedule: DutySchedule,
     dateStr: string,
     count: number,
   ): Promise<DutyEvent[]> {
-    const eventRepo = manager.getRepository(DutyEvent);
-    const studentRepo = manager.getRepository(Student);
+    return await this.executeWithRetry(async () => {
+      const { available, absent } = await this.loadStudentsWithAbsences(
+        schedule.group_id, 
+        dateStr, 
+        schedule.id
+      );
+      
+      const defaultScore = schedule.duty_type.default_score;
+      
+      const allStudents = [
+        ...available.map((s) => ({ student: s, absence: null as Absence | null, type: 'available' as const })),
+        ...absent.map(({ student, absence }) => ({ student, absence, type: 'absent' as const })),
+      ].sort((a, b) => a.student.duty_score - b.student.duty_score);
 
-    const { available, absent } = await this.loadStudentsWithAbsences(schedule.group_id, dateStr, schedule.id);
-    const defaultScore = schedule.duty_type.default_score;
+      const eventsToInsert: any[] = [];
+      const usedAvailableIds = new Set<number>();
+      const processedIds = new Set<number>();
+      const pendingAssignments: Student[] = [];
+      const penaltiesToApply: Array<{ id: number; penalty: number }> = [];
+      
+      for (let slot = 0; slot < count; slot++) {
+        for (const entry of allStudents) {
+          if (processedIds.has(entry.student.id)) continue;
+          processedIds.add(entry.student.id);
 
-    // Объединяем всех студентов, сортируем по duty_score (наименьший — первый)
-    const allStudents = [
-      ...available.map((s) => ({ student: s, absence: null as Absence | null })),
-      ...absent.map(({ student, absence }) => ({ student, absence })),
-    ].sort((a, b) => a.student.duty_score - b.student.duty_score);
-
-    const createdEvents: DutyEvent[] = [];
-    // Индексы студентов из available, которые уже назначены на pending
-    const usedAvailableIds = new Set<number>();
-    // Индексы уже обработанных студентов (reassigned + pending)
-    const processedIds = new Set<number>();
-
-    for (let slot = 0; slot < count; slot++) {
-      // Перебираем очередь: ищем первого ещё не обработанного студента
-      for (const entry of allStudents) {
-        if (processedIds.has(entry.student.id)) continue;
-
-        processedIds.add(entry.student.id);
-
-        if (entry.absence !== null) {
-          // Студент отсутствует — создаём reassigned событие
-          let scoreEarned = 0;
-          if (!entry.absence.is_approved) {
-            // Неодобренное отсутствие — штраф
-            scoreEarned = -defaultScore;
-            await studentRepo.increment({ id: entry.student.id }, 'duty_score', scoreEarned);
-          }
-
-          const reassignedEvent = eventRepo.create({
-            student_id: entry.student.id,
-            schedule_id: schedule.id,
-            duty_date: dateStr as unknown as Date,
-            status: 'reassigned',
-            score_earned: scoreEarned === 0 ? null : scoreEarned,
-            notes: entry.absence.is_approved
-              ? 'Отсутствие одобрено'
-              : 'Отсутствие не одобрено — штраф',
-          });
-          createdEvents.push(await eventRepo.save(reassignedEvent));
-
-          // Ищем замену среди доступных (не отсутствующих), ещё не назначенных
-          const replacement = available.find(
-            (s) => !usedAvailableIds.has(s.id) && !processedIds.has(s.id),
-          );
-
-          if (replacement) {
-            usedAvailableIds.add(replacement.id);
-            processedIds.add(replacement.id);
-
-            const pendingEvent = eventRepo.create({
-              student_id: replacement.id,
+          if (entry.type === 'absent') {
+            let scoreEarned = 0;
+            if (!entry.absence!.is_approved) {
+              scoreEarned = -defaultScore;
+              penaltiesToApply.push({ id: entry.student.id, penalty: scoreEarned });
+            }
+            
+            eventsToInsert.push({
+              student_id: entry.student.id,
               schedule_id: schedule.id,
-              duty_date: dateStr as unknown as Date,
-              status: 'pending',
-              score_earned: null,
-              notes: null,
+              duty_date: dateStr,
+              status: 'reassigned',
+              score_earned: scoreEarned,
+              notes: entry.absence!.is_approved
+                ? 'Отсутствие одобрено'
+                : 'Отсутствие не одобрено — штраф',
             });
-            createdEvents.push(await eventRepo.save(pendingEvent));
+            
+            const replacement = available.find(s => !usedAvailableIds.has(s.id) && !processedIds.has(s.id));
+            if (replacement) {
+              usedAvailableIds.add(replacement.id);
+              processedIds.add(replacement.id);
+              pendingAssignments.push(replacement);
+            }
+            break;
+          } else {
+            if (usedAvailableIds.has(entry.student.id)) continue;
+            usedAvailableIds.add(entry.student.id);
+            pendingAssignments.push(entry.student);
+            break;
           }
-          // Слот закрыт (либо с заменой, либо без — если доступных не осталось)
-          break;
-        } else {
-          // Студент доступен — назначаем на pending
-          if (usedAvailableIds.has(entry.student.id)) continue;
-
-          usedAvailableIds.add(entry.student.id);
-
-          const pendingEvent = eventRepo.create({
-            student_id: entry.student.id,
-            schedule_id: schedule.id,
-            duty_date: dateStr as unknown as Date,
-            status: 'pending',
-            score_earned: null,
-            notes: null,
-          });
-          createdEvents.push(await eventRepo.save(pendingEvent));
-          break;
         }
       }
-    }
-
-    return createdEvents;
+      
+      for (const student of pendingAssignments) {
+        eventsToInsert.push({
+          student_id: student.id,
+          schedule_id: schedule.id,
+          duty_date: dateStr,
+          status: 'pending',
+          score_earned: null,
+          notes: null,
+        });
+      }
+      
+      let insertedEvents: DutyEvent[] = [];
+      
+      // Выполняем операции последовательно, без транзакции
+      // При ошибке retry повторит всю операцию целиком
+      if (eventsToInsert.length > 0) {
+        const result = await this.eventRepo
+          .createQueryBuilder()
+          .insert()
+          .into(DutyEvent)
+          .values(eventsToInsert)
+          .returning('*')
+          .execute();
+        insertedEvents = result.generatedMaps as DutyEvent[];
+      }
+      
+      if (penaltiesToApply.length > 0) {
+        // Обновляем каждого студента отдельно, но с retry на уровне всей операции
+        for (const { id, penalty } of penaltiesToApply) {
+          await this.studentRepo.increment({ id }, 'duty_score', penalty);
+        }
+      }
+      
+      return insertedEvents;
+    });
   }
 
-  /** Создать события для одной даты (пропускает если уже существуют) */
+  /** Создать события для одной даты */
   private async generateForDate(schedule: DutySchedule, date: Date): Promise<DutyEvent[]> {
     const dateStr = date.toISOString().split('T')[0];
 
     const existing = await this.eventRepo.find({
-      where: { schedule_id: schedule.id, duty_date: dateStr as unknown as Date },
+      where: {
+        schedule_id: schedule.id,
+        duty_date: dateStr as unknown as Date,
+      },
+      take: 1,
     });
+    
     if (existing.length > 0) return existing;
 
-    return this.dataSource.transaction((manager) =>
-      this.assignStudents(manager, schedule, dateStr, schedule.students_per_day),
-    );
+    return this.assignStudents(schedule, dateStr, schedule.students_per_day);
   }
 
   // ─── Публичные методы ─────────────────────────────────────────────────────
 
-  /**
-   * Авто-генерация: вызывается cron-задачей каждый день.
-   * Создаёт события на сегодня для всех активных расписаний,
-   * у которых сегодня — рабочий день по duty_days.
-   */
   async generateForToday(): Promise<void> {
     const today = new Date();
     const field = DOW_FIELD[today.getDay()];
@@ -268,17 +266,12 @@ export class DutyEventsService {
     for (const schedule of schedules) {
       try {
         await this.generateForDate(schedule, today);
-      } catch {
-        // Пропускаем расписания без доступных студентов — не прерываем цикл
+      } catch (error) {
+        this.logger.error(`Failed to generate for schedule ${schedule.id}: ${error.message}`);
       }
     }
   }
 
-  /**
-   * Ручная генерация событий на указанную дату для расписания.
-   * Пользователь сам выбирает дату, студенты подбираются автоматически
-   * по минимальному duty_score с учётом отсутствий.
-   */
   async generateManual(userId: number, scheduleId: number, dateStr: string): Promise<DutyEvent[]> {
     const schedule = await this.assertScheduleOwner(userId, scheduleId);
     if (!schedule.is_active) throw new BadRequestException('Расписание неактивно');
@@ -287,100 +280,108 @@ export class DutyEventsService {
     return this.generateForDate(schedule, date);
   }
 
-    /**
+  /**
    * Вызывается при создании или обновлении записи об отсутствии.
-   * Находит все pending-события студента в диапазоне дат отсутствия
-   * и переназначает их: переводит в `reassigned` (с штрафом если не одобрено),
-   * затем для каждого расписания создаёт новое pending-событие для замены.
    */
   async handleAbsenceUpsert(absence: Absence): Promise<void> {
-    // Найти все pending-события студента в диапазоне отсутствия
-    const pendingEvents = await this.eventRepo
-      .createQueryBuilder('e')
-      .innerJoinAndSelect('e.schedule', 's')
-      .innerJoinAndSelect('s.duty_type', 'dt')
-      .innerJoinAndSelect('s.group', 'g')
-      .where('e.student_id = :studentId', { studentId: absence.student_id })
-      .andWhere('e.status = :status', { status: 'pending' })
-      .andWhere('e.duty_date >= :from', { from: absence.date_from })
-      .andWhere('e.duty_date <= :to', { to: absence.date_to })
-      .getMany();
+    await this.executeWithRetry(async () => {
+      // 1. Найти все pending-события студента в диапазоне отсутствия
+      const pendingEvents = await this.eventRepo
+        .createQueryBuilder('e')
+        .innerJoinAndSelect('e.schedule', 's')
+        .innerJoinAndSelect('s.duty_type', 'dt')
+        .innerJoinAndSelect('s.group', 'g')
+        .where('e.student_id = :studentId', { studentId: absence.student_id })
+        .andWhere('e.status = :status', { status: 'pending' })
+        .andWhere('e.duty_date >= :from', { from: absence.date_from })
+        .andWhere('e.duty_date <= :to', { to: absence.date_to })
+        .getMany();
 
-    if (pendingEvents.length === 0) return;
+      if (pendingEvents.length === 0) return;
 
-    await this.dataSource.transaction(async (manager) => {
-      const eventRepo = manager.getRepository(DutyEvent);
-      const studentRepo = manager.getRepository(Student);
-
+      const defaultScore = pendingEvents[0]?.schedule?.duty_type?.default_score || 0;
+      const shouldPenalty = !absence.is_approved && defaultScore > 0;
+      const eventIds = pendingEvents.map(e => e.id);
+      
+      // 2. Обновляем события
+      await this.eventRepo.update(
+        { id: In(eventIds) },
+        {
+          status: 'reassigned',
+          score_earned: shouldPenalty ? -defaultScore : null,
+          notes: absence.is_approved
+            ? 'Отсутствие одобрено — переназначено'
+            : 'Отсутствие не одобрено — переназначено со штрафом',
+        }
+      );
+      
+      // 3. Применяем штраф
+      if (shouldPenalty) {
+        await this.studentRepo.increment(
+          { id: absence.student_id },
+          'duty_score',
+          -defaultScore
+        );
+      }
+      
+      // 4. Группируем события по schedule_id и duty_date
+      const eventsByScheduleAndDate = new Map<string, { 
+        schedule: DutySchedule; 
+        dateStr: string; 
+        count: number;
+      }>();
+      
       for (const event of pendingEvents) {
-        const defaultScore = event.schedule.duty_type.default_score;
-        const dateStr = (event.duty_date as unknown as string).slice(0, 10);
-
-        // Штраф только если отсутствие не одобрено
-        let scoreEarned: number | null = null;
-        if (!absence.is_approved && defaultScore > 0) {
-          scoreEarned = -defaultScore;
-          await studentRepo.increment({ id: absence.student_id }, 'duty_score', scoreEarned);
-        }
-
-        // Переводим текущее событие в reassigned
-        event.status = 'reassigned';
-        event.score_earned = scoreEarned;
-        event.notes = absence.is_approved
-          ? 'Отсутствие одобрено'
-          : 'Отсутствие не одобрено — штраф';
-        await eventRepo.save(event);
-
-                // Ищем замену: активный студент той же группы, не отсутствующий в эту дату,
-        // не имеющий pending-события ни в одном расписании группы на эту дату, с наименьшим duty_score
-        const links = await manager.getRepository(StudentsGroup).find({
-          where: { group_id: event.schedule.group_id },
-          relations: ['student'],
-        });
-        const activeStudents = links.map((l) => l.student).filter((s) => s.is_active);
-
-        // Студенты, уже имеющие pending-событие в любом расписании группы на эту дату
-        const busyEvents = await eventRepo
-          .createQueryBuilder('e')
-          .innerJoin('e.schedule', 's', 's.group_id = :groupId', { groupId: event.schedule.group_id })
-          .where('e.duty_date = :date', { date: dateStr })
-          .andWhere('e.status = :status', { status: 'pending' })
-          .andWhere('e.student_id IN (:...ids)', { ids: activeStudents.map((s) => s.id) })
-          .getMany();
-        const busyStudentIds = new Set(busyEvents.map((e) => e.student_id));
-
-        // Студенты отсутствующие в эту дату
-        const absencesOnDate = await manager.getRepository(Absence)
-          .createQueryBuilder('a')
-          .where('a.student_id IN (:...ids)', { ids: activeStudents.map((s) => s.id) })
-          .andWhere('a.date_from <= :date', { date: dateStr })
-          .andWhere('a.date_to >= :date', { date: dateStr })
-          .getMany();
-        const absentIds = new Set(absencesOnDate.map((a) => a.student_id));
-
-        // Кандидаты на замену: не отсутствуют и не заняты ни в одном расписании группы на эту дату
-        const candidates = activeStudents
-          .filter((s) => !absentIds.has(s.id) && !busyStudentIds.has(s.id))
-          .sort((a, b) => a.duty_score - b.duty_score);
-
-        if (candidates.length > 0) {
-          const replacement = candidates[0];
-          const newEvent = eventRepo.create({
-            student_id: replacement.id,
-            schedule_id: event.schedule_id,
-            duty_date: dateStr as unknown as Date,
-            status: 'pending',
-            score_earned: null,
-            notes: null,
+        const key = `${event.schedule_id}_${event.duty_date}`;
+        if (!eventsByScheduleAndDate.has(key)) {
+          eventsByScheduleAndDate.set(key, {
+            schedule: event.schedule,
+            dateStr: (event.duty_date as unknown as string).slice(0, 10),
+            count: 0,
           });
-          await eventRepo.save(newEvent);
         }
-        // Если замены нет — оставляем только reassigned без нового pending
+        eventsByScheduleAndDate.get(key)!.count++;
+      }
+      
+      // 5. Ищем замены
+      const replacementEvents: any[] = [];
+      
+      for (const { schedule, dateStr, count } of eventsByScheduleAndDate.values()) {
+        const { available } = await this.loadStudentsWithAbsences(
+          schedule.group_id,
+          dateStr,
+          schedule.id
+        );
+        
+        if (available.length > 0) {
+          const neededReplacements = Math.min(count, available.length);
+          
+          for (let i = 0; i < neededReplacements; i++) {
+            replacementEvents.push({
+              student_id: available[i].id,
+              schedule_id: schedule.id,
+              duty_date: dateStr,
+              status: 'pending',
+              score_earned: null,
+              notes: `Замена для студента ID:${absence.student_id} (${absence.is_approved ? 'одобрено' : 'не одобрено'})`,
+            });
+          }
+        }
+      }
+      
+      // 6. Вставляем замены
+      if (replacementEvents.length > 0) {
+        await this.eventRepo
+          .createQueryBuilder()
+          .insert()
+          .into(DutyEvent)
+          .values(replacementEvents)
+          .execute();
       }
     });
   }
 
-  /** Список событий пользователя с фильтром по расписанию */
+  /** Список событий пользователя */
   async findAll(userId: number, scheduleId?: number): Promise<DutyEvent[]> {
     const qb = this.eventRepo
       .createQueryBuilder('e')
@@ -392,68 +393,110 @@ export class DutyEventsService {
     return qb.getMany();
   }
 
-  /** Получить одно событие (только владельца) */
+  /** Получить одно событие */
   async findOne(userId: number, id: number): Promise<DutyEvent> {
-    const event = await this.eventRepo.findOne({
-      where: { id },
-      relations: ['schedule', 'schedule.group', 'schedule.duty_type', 'student'],
-    });
+    const event = await this.eventRepo
+      .createQueryBuilder('e')
+      .innerJoinAndSelect('e.schedule', 's')
+      .innerJoinAndSelect('s.group', 'g')
+      .innerJoinAndSelect('s.duty_type', 'dt')
+      .leftJoinAndSelect('e.student', 'st')
+      .where('e.id = :id', { id })
+      .getOne();
     if (!event) throw new NotFoundException('Событие не найдено');
     if (event.schedule.group.user_id !== userId) throw new ForbiddenException();
     return event;
   }
 
-    /**
-   * Изменить статус события пользователем.
-   *
-   * Допустимые переходы (только из pending):
-   *   pending → completed:  студент выполнил дежурство, начисляется +default_score
-   *   pending → cancelled:  дежурство отменено, score не меняется
-   *
-   * Статус reassigned выставляется только автоматически системой при назначении.
-   * Повторная смена статуса с completed откатывает ранее начисленный score_earned.
-   */
+  /** Обновление статуса */
   async updateStatus(userId: number, id: number, dto: UpdateDutyEventDto): Promise<DutyEvent> {
-    const event = await this.findOne(userId, id);
+    return await this.executeWithRetry(async () => {
+      const event = await this.findOne(userId, id);
 
-    if (event.status === dto.status) {
-      throw new BadRequestException('Статус уже установлен');
-    }
-
-    if (event.status === 'reassigned') {
-      throw new BadRequestException('Нельзя изменить статус переназначенного события');
-    }
-
-    if (event.status === 'cancelled' || event.status === 'completed') {
-      // Разрешаем смену статуса между completed и cancelled (с откатом очков)
-      if (dto.status !== 'completed' && dto.status !== 'cancelled') {
-        throw new BadRequestException('Недопустимый переход статуса');
+      if (event.status === dto.status) {
+        throw new BadRequestException('Статус уже установлен');
       }
-    }
 
-    return this.dataSource.transaction(async (manager) => {
-      const eventRepo = manager.getRepository(DutyEvent);
-      const studentRepo = manager.getRepository(Student);
+      if (event.status === 'reassigned') {
+        throw new BadRequestException('Нельзя изменить статус переназначенного события');
+      }
+
       const defaultScore = event.schedule.duty_type.default_score;
 
-      // Откатить ранее начисленный score_earned если был
+      // Откатить ранее начисленный score если был
       if (event.score_earned !== null && event.score_earned !== 0) {
-        await studentRepo.increment({ id: event.student_id }, 'duty_score', -event.score_earned);
+        await this.studentRepo.increment(
+          { id: event.student_id },
+          'duty_score',
+          -event.score_earned,
+        );
       }
 
       let newScoreEarned: number | null = null;
 
       if (dto.status === 'completed') {
         newScoreEarned = defaultScore;
-        await studentRepo.increment({ id: event.student_id }, 'duty_score', newScoreEarned);
+        await this.studentRepo.increment(
+          { id: event.student_id },
+          'duty_score',
+          newScoreEarned,
+        );
       }
-      // cancelled → score не меняется, score_earned остаётся null
 
-      event.status = dto.status;
-      event.score_earned = newScoreEarned;
-      if (dto.notes !== undefined) event.notes = dto.notes;
+      await this.eventRepo.update(id, {
+        status: dto.status,
+        score_earned: newScoreEarned,
+        notes: dto.notes !== undefined ? dto.notes : event.notes,
+      });
 
-      return eventRepo.save(event);
+      return await this.eventRepo.findOne({ where: { id } }) as DutyEvent;
     });
+  }
+
+  /**
+   * Универсальный метод для выполнения операций с повторными попытками
+   */
+  private async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3,
+    delay: number = 1000
+  ): Promise<T> {
+    let lastError: Error;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        const errorMessage = error.message?.toLowerCase() || '';
+        
+        // Проверяем, связана ли ошибка с соединением
+        const isConnectionError = 
+          errorMessage.includes('connection terminated') ||
+          errorMessage.includes('connection closed') ||
+          errorMessage.includes('connection lost') ||
+          errorMessage.includes('timeout') ||
+          errorMessage.includes('could not connect') ||
+          errorMessage.includes('query runner already released');
+        
+        if (!isConnectionError || attempt === maxRetries) {
+          this.logger.error(
+            `Operation failed after ${attempt} attempt(s): ${error.message}`,
+            error.stack
+          );
+          throw error;
+        }
+        
+        // Экспоненциальная задержка
+        const waitTime = delay * Math.pow(2, attempt - 1);
+        this.logger.warn(
+          `Connection error, retrying in ${waitTime}ms (attempt ${attempt}/${maxRetries}): ${error.message}`
+        );
+        
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+    
+    throw lastError!;
   }
 }

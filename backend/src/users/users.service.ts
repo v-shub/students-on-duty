@@ -22,6 +22,7 @@ import {
 } from './dto/auth.dto';
 import { RegisterUserDto, LoginUserDto, UpdateUserDto } from './dto/user.dto';
 
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -31,17 +32,17 @@ export class UsersService {
     private readonly verificationService: VerificationService,
   ) {}
 
-  /** Запрос кода подтверждения */
+    /** Запрос кода подтверждения */
   async requestCode(dto: RequestCodeDto): Promise<{ message: string }> {
-  const contact = dto.email || dto.phone;
-  if (!contact) {
-    throw new BadRequestException('Укажите email или телефон');
-  }
+    const contact = dto.email || dto.phone;
+    if (!contact) {
+      throw new BadRequestException('Укажите email или телефон');
+    }
 
-  // Просто отправляем код, без проверок существования
-  await this.verificationService.generateAndSendCode(contact, dto.email ? 'email' : 'phone');
-  return { message: `Код подтверждения отправлен на ${contact}` };
-}
+    // Просто отправляем код, без проверок существования
+    await this.verificationService.generateAndSendCode(contact, dto.email ? 'email' : 'phone');
+    return { message: `Код подтверждения отправлен на ${contact}` };
+  }
 
     /** Регистрация с подтверждением */
   async registerWithCode(dto: VerifyAndRegisterDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {
@@ -49,17 +50,20 @@ export class UsersService {
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
     }
-    await this.verificationService.verifyCode(contact, dto.code);
+        await this.verificationService.verifyCode(contact, dto.code);
     const existingUser = await this.repo.findOne({ where: { username: dto.username } });
     if (existingUser) {
       throw new ConflictException('Имя пользователя уже занято');
     }
-        const password_hash = await bcrypt.hash(dto.password, 10);
+    const password_hash = await bcrypt.hash(dto.password, 10);
     const userData: Partial<User> = { username: dto.username, password_hash };
     if (dto.email) userData.email = dto.email;
     if (dto.phone) userData.phone = dto.phone;
-    const insertResult = await this.repo.insert(userData);
-    const saved = await this.repo.findOneOrFail({ where: { id: insertResult.identifiers[0].id } });
+                const insertResult = await this.repo.insert(userData);
+    const uid = insertResult.identifiers[0].id;
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo.createQueryBuilder('u').where('u.id = :id', { id: uid }).getOne();
+    if (!saved) throw new NotFoundException('Пользователь не найден после создания');
     const accessToken = this.authService.generateToken(saved.id, saved.username);
     const refreshToken = this.authService.generateRefreshToken(saved.id, saved.username);
     const { password_hash: _, ...result } = saved;
@@ -72,9 +76,9 @@ export class UsersService {
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
     }
-    await this.verificationService.verifyCode(contact, dto.code);
-    const user = await this.repo.findOne({
-      where: dto.email ? { email: dto.email } : { phone: dto.phone }
+        await this.verificationService.verifyCode(contact, dto.code);
+        const user = await this.repo.findOne({
+      where: dto.email ? { email: dto.email } : { phone: dto.phone },
     });
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
@@ -91,8 +95,8 @@ export class UsersService {
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
     }
-    const existingUser = await this.repo.findOne({
-      where: dto.email ? { email: dto.email } : { phone: dto.phone }
+            const existingUser = await this.repo.findOne({
+      where: dto.email ? { email: dto.email } : { phone: dto.phone },
     });
     if (existingUser) {
       throw new ConflictException(`${dto.email ? 'Email' : 'Телефон'} уже привязан к другому аккаунту`);
@@ -117,36 +121,41 @@ export class UsersService {
     if (!contact) {
       throw new BadRequestException('Укажите email или телефон');
     }
-    await this.verificationService.verifyCode(contact, dto.code);
-    const existingUser = await this.repo.findOne({
-      where: dto.email ? { email: dto.email } : { phone: dto.phone }
+        await this.verificationService.verifyCode(contact, dto.code);
+        const existingUser = await this.repo.findOne({
+      where: dto.email ? { email: dto.email } : { phone: dto.phone },
     });
     if (existingUser && existingUser.id !== userId) {
       throw new ConflictException(`${dto.email ? 'Email' : 'Телефон'} уже привязан к другому аккаунту`);
     }
-        const user = await this.repo.findOne({ where: { id: userId } });
+    const user = await this.repo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Пользователь не найден');
     const updateData: Partial<User> = {};
     if (dto.email) updateData.email = dto.email;
     if (dto.phone) updateData.phone = dto.phone;
-    await this.repo.update(userId, updateData);
-    const saved = await this.repo.findOneOrFail({ where: { id: userId } });
+        await this.repo.update(userId, updateData);
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo.createQueryBuilder('u').where('u.id = :id', { id: userId }).getOne();
+    if (!saved) throw new NotFoundException('Пользователь не найден после обновления');
     const { password_hash: _, ...result } = saved;
     return result;
   }
 
-  /** Регистрация нового старосты */
-    async register(dto: RegisterUserDto): Promise<Omit<User, 'password_hash'>> {
-    const exists = await this.repo.findOne({ where: { username: dto.username } });
+    /** Регистрация нового старосты */
+  async register(dto: RegisterUserDto): Promise<Omit<User, 'password_hash'>> {
+        const exists = await this.repo.findOne({ where: { username: dto.username } });
     if (exists) throw new ConflictException('Пользователь с таким логином уже существует');
     const password_hash = await bcrypt.hash(dto.password, 10);
-    const result = await this.repo.insert({ username: dto.username, email: dto.email, phone: dto.phone, password_hash });
-    const saved = await this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
+        const result = await this.repo.insert({ username: dto.username, email: dto.email, phone: dto.phone, password_hash });
+    const rid = result.identifiers[0].id;
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo.createQueryBuilder('u').where('u.id = :id', { id: rid }).getOne();
+    if (!saved) throw new NotFoundException('Пользователь не найден после создания');
     const { password_hash: _, ...user } = saved;
     return user;
   }
 
-    /** Логин — возвращает JWT токен и данные пользователя */
+      /** Логин — возвращает JWT токен и данные пользователя */
   async login(dto: LoginUserDto): Promise<{ accessToken: string; refreshToken: string; user: Omit<User, 'password_hash'> }> {
     const user = await this.repo.findOne({ where: { username: dto.username } });
     if (!user) throw new UnauthorizedException('Неверный логин или пароль');
@@ -169,24 +178,26 @@ export class UsersService {
     return { message: 'Вы успешно вышли из системы' };
   }
 
-  /** Получить профиль по ID */
+    /** Получить профиль по ID */
   async findOne(id: number): Promise<Omit<User, 'password_hash'>> {
-    const user = await this.repo.findOne({ where: { id } });
+        const user = await this.repo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
     const { password_hash: _, ...result } = user;
     return result;
   }
 
   /** Обновить профиль */
-    async update(id: number, dto: UpdateUserDto): Promise<Omit<User, 'password_hash'>> {
+  async update(id: number, dto: UpdateUserDto): Promise<Omit<User, 'password_hash'>> {
     const user = await this.repo.findOne({ where: { id } });
     if (!user) throw new NotFoundException('Пользователь не найден');
     const updateData: Partial<User> = {};
     if (dto.password) updateData.password_hash = await bcrypt.hash(dto.password, 10);
     if (dto.email !== undefined) updateData.email = dto.email;
     if (dto.phone !== undefined) updateData.phone = dto.phone;
-    await this.repo.update(id, updateData);
-    const saved = await this.repo.findOneOrFail({ where: { id } });
+        await this.repo.update(id, updateData);
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo.createQueryBuilder('u').where('u.id = :id', { id }).getOne();
+    if (!saved) throw new NotFoundException('Пользователь не найден после обновления');
     const { password_hash: _, ...result } = saved;
     return result;
   }

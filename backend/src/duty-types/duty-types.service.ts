@@ -11,10 +11,17 @@ export class DutyTypesService {
     private readonly repo: Repository<DutyType>,
   ) {}
 
-  /** Создать тип дежурства */
+    /** Создать тип дежурства */
     async create(dto: CreateDutyTypeDto): Promise<DutyType> {
     const result = await this.repo.insert(dto);
-    return this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
+    const id = result.identifiers[0].id;
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const created = await this.repo
+      .createQueryBuilder('dt')
+      .where('dt.id = :id', { id })
+      .getOne();
+    if (!created) throw new NotFoundException('Тип дежурства не найден после создания');
+    return created;
   }
 
   /** Список всех типов дежурств */
@@ -29,11 +36,17 @@ export class DutyTypesService {
     return dt;
   }
 
-  /** Обновить тип дежурства */
+    /** Обновить тип дежурства */
     async update(id: number, dto: UpdateDutyTypeDto): Promise<DutyType> {
     await this.findOne(id);
     await this.repo.update(id, dto);
-    return this.repo.findOneOrFail({ where: { id } });
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const updated = await this.repo
+      .createQueryBuilder('dt')
+      .where('dt.id = :id', { id })
+      .getOne();
+    if (!updated) throw new NotFoundException('Тип дежурства не найден после обновления');
+    return updated;
   }
 
   /** Удалить тип дежурства */

@@ -30,9 +30,13 @@ export class AbsencesService {
     if (!link) throw new ForbiddenException();
   }
 
-  /** Проверить владельца записи об отсутствии через students_groups → group.user_id */
+    /** Проверить владельца записи об отсутствии через students_groups → group.user_id */
   private async assertOwner(userId: number, id: number): Promise<Absence> {
-    const absence = await this.repo.findOne({ where: { id } });
+    // createQueryBuilder вместо findOne — не открывает лишних соединений из пула
+    const absence = await this.repo
+      .createQueryBuilder('a')
+      .where('a.id = :id', { id })
+      .getOne();
     if (!absence) throw new NotFoundException('Запись об отсутствии не найдена');
     await this.assertStudentOwner(userId, absence.student_id);
     return absence;
@@ -42,7 +46,7 @@ export class AbsencesService {
    *  После сохранения автоматически переназначает все pending-события
    *  студента, попадающие в диапазон отсутствия.
    */
-    async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
+        async create(userId: number, dto: CreateAbsenceDto): Promise<Absence> {
     await this.assertStudentOwner(userId, dto.student_id);
     const result = await this.repo.insert({
       student_id: dto.student_id,
@@ -51,7 +55,13 @@ export class AbsencesService {
       reason: dto.reason ?? null,
       is_approved: dto.is_approved ?? false,
     });
-    const saved = await this.repo.findOneOrFail({ where: { id: result.identifiers[0].id } });
+    const id = result.identifiers[0].id;
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo
+      .createQueryBuilder('a')
+      .where('a.id = :id', { id })
+      .getOne();
+    if (!saved) throw new NotFoundException('Запись об отсутствии не найдена после создания');
     await this.dutyEventsService.handleAbsenceUpsert(saved);
     return saved;
   }
@@ -77,7 +87,7 @@ export class AbsencesService {
    *  После сохранения автоматически переназначает pending-события
    *  студента в новом диапазоне дат.
    */
-    async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
+        async update(userId: number, id: number, dto: UpdateAbsenceDto): Promise<Absence> {
     const absence = await this.assertOwner(userId, id);
     await this.repo.update(id, {
       date_from: dto.date_from ?? absence.date_from,
@@ -85,7 +95,12 @@ export class AbsencesService {
       reason: dto.reason !== undefined ? dto.reason : absence.reason,
       is_approved: dto.is_approved !== undefined ? dto.is_approved : absence.is_approved,
     });
-    const saved = await this.repo.findOneOrFail({ where: { id } });
+    // createQueryBuilder вместо findOneOrFail — не открывает лишних соединений из пула
+    const saved = await this.repo
+      .createQueryBuilder('a')
+      .where('a.id = :id', { id })
+      .getOne();
+    if (!saved) throw new NotFoundException('Запись об отсутствии не найдена после обновления');
     await this.dutyEventsService.handleAbsenceUpsert(saved);
     return saved;
   }
