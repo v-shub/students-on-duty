@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UpdateDutyDayDto {
 
- bool? get isMonday; bool? get isTuesday; bool? get isWednesday; bool? get isThursday; bool? get isFriday; bool? get isSaturday; bool? get isSunday;
+@JsonKey(name: 'is_monday') bool? get isMonday;@JsonKey(name: 'is_tuesday') bool? get isTuesday;@JsonKey(name: 'is_wednesday') bool? get isWednesday;@JsonKey(name: 'is_thursday') bool? get isThursday;@JsonKey(name: 'is_friday') bool? get isFriday;@JsonKey(name: 'is_saturday') bool? get isSaturday;@JsonKey(name: 'is_sunday') bool? get isSunday;
 /// Create a copy of UpdateDutyDayDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $UpdateDutyDayDtoCopyWith<$Res>  {
   factory $UpdateDutyDayDtoCopyWith(UpdateDutyDayDto value, $Res Function(UpdateDutyDayDto) _then) = _$UpdateDutyDayDtoCopyWithImpl;
 @useResult
 $Res call({
- bool? isMonday, bool? isTuesday, bool? isWednesday, bool? isThursday, bool? isFriday, bool? isSaturday, bool? isSunday
+@JsonKey(name: 'is_monday') bool? isMonday,@JsonKey(name: 'is_tuesday') bool? isTuesday,@JsonKey(name: 'is_wednesday') bool? isWednesday,@JsonKey(name: 'is_thursday') bool? isThursday,@JsonKey(name: 'is_friday') bool? isFriday,@JsonKey(name: 'is_saturday') bool? isSaturday,@JsonKey(name: 'is_sunday') bool? isSunday
 });
 
 
@@ -159,7 +159,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool? isMonday,  bool? isTuesday,  bool? isWednesday,  bool? isThursday,  bool? isFriday,  bool? isSaturday,  bool? isSunday)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'is_monday')  bool? isMonday, @JsonKey(name: 'is_tuesday')  bool? isTuesday, @JsonKey(name: 'is_wednesday')  bool? isWednesday, @JsonKey(name: 'is_thursday')  bool? isThursday, @JsonKey(name: 'is_friday')  bool? isFriday, @JsonKey(name: 'is_saturday')  bool? isSaturday, @JsonKey(name: 'is_sunday')  bool? isSunday)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UpdateDutyDayDto() when $default != null:
 return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -180,7 +180,7 @@ return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursda
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool? isMonday,  bool? isTuesday,  bool? isWednesday,  bool? isThursday,  bool? isFriday,  bool? isSaturday,  bool? isSunday)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'is_monday')  bool? isMonday, @JsonKey(name: 'is_tuesday')  bool? isTuesday, @JsonKey(name: 'is_wednesday')  bool? isWednesday, @JsonKey(name: 'is_thursday')  bool? isThursday, @JsonKey(name: 'is_friday')  bool? isFriday, @JsonKey(name: 'is_saturday')  bool? isSaturday, @JsonKey(name: 'is_sunday')  bool? isSunday)  $default,) {final _that = this;
 switch (_that) {
 case _UpdateDutyDayDto():
 return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -200,7 +200,7 @@ return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursda
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool? isMonday,  bool? isTuesday,  bool? isWednesday,  bool? isThursday,  bool? isFriday,  bool? isSaturday,  bool? isSunday)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'is_monday')  bool? isMonday, @JsonKey(name: 'is_tuesday')  bool? isTuesday, @JsonKey(name: 'is_wednesday')  bool? isWednesday, @JsonKey(name: 'is_thursday')  bool? isThursday, @JsonKey(name: 'is_friday')  bool? isFriday, @JsonKey(name: 'is_saturday')  bool? isSaturday, @JsonKey(name: 'is_sunday')  bool? isSunday)?  $default,) {final _that = this;
 switch (_that) {
 case _UpdateDutyDayDto() when $default != null:
 return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -215,16 +215,16 @@ return $default(_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursda
 @JsonSerializable()
 
 class _UpdateDutyDayDto implements UpdateDutyDayDto {
-  const _UpdateDutyDayDto({this.isMonday, this.isTuesday, this.isWednesday, this.isThursday, this.isFriday, this.isSaturday, this.isSunday});
+  const _UpdateDutyDayDto({@JsonKey(name: 'is_monday') this.isMonday, @JsonKey(name: 'is_tuesday') this.isTuesday, @JsonKey(name: 'is_wednesday') this.isWednesday, @JsonKey(name: 'is_thursday') this.isThursday, @JsonKey(name: 'is_friday') this.isFriday, @JsonKey(name: 'is_saturday') this.isSaturday, @JsonKey(name: 'is_sunday') this.isSunday});
   factory _UpdateDutyDayDto.fromJson(Map<String, dynamic> json) => _$UpdateDutyDayDtoFromJson(json);
 
-@override final  bool? isMonday;
-@override final  bool? isTuesday;
-@override final  bool? isWednesday;
-@override final  bool? isThursday;
-@override final  bool? isFriday;
-@override final  bool? isSaturday;
-@override final  bool? isSunday;
+@override@JsonKey(name: 'is_monday') final  bool? isMonday;
+@override@JsonKey(name: 'is_tuesday') final  bool? isTuesday;
+@override@JsonKey(name: 'is_wednesday') final  bool? isWednesday;
+@override@JsonKey(name: 'is_thursday') final  bool? isThursday;
+@override@JsonKey(name: 'is_friday') final  bool? isFriday;
+@override@JsonKey(name: 'is_saturday') final  bool? isSaturday;
+@override@JsonKey(name: 'is_sunday') final  bool? isSunday;
 
 /// Create a copy of UpdateDutyDayDto
 /// with the given fields replaced by the non-null parameter values.
@@ -259,7 +259,7 @@ abstract mixin class _$UpdateDutyDayDtoCopyWith<$Res> implements $UpdateDutyDayD
   factory _$UpdateDutyDayDtoCopyWith(_UpdateDutyDayDto value, $Res Function(_UpdateDutyDayDto) _then) = __$UpdateDutyDayDtoCopyWithImpl;
 @override @useResult
 $Res call({
- bool? isMonday, bool? isTuesday, bool? isWednesday, bool? isThursday, bool? isFriday, bool? isSaturday, bool? isSunday
+@JsonKey(name: 'is_monday') bool? isMonday,@JsonKey(name: 'is_tuesday') bool? isTuesday,@JsonKey(name: 'is_wednesday') bool? isWednesday,@JsonKey(name: 'is_thursday') bool? isThursday,@JsonKey(name: 'is_friday') bool? isFriday,@JsonKey(name: 'is_saturday') bool? isSaturday,@JsonKey(name: 'is_sunday') bool? isSunday
 });
 
 

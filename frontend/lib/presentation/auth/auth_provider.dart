@@ -74,12 +74,9 @@ class AuthNotifier extends Notifier<AuthState> {
     return error.toString();
   }
 
-  // В классе AuthNotifier
-
   Future<bool> requestCode({String? email, String? phone}) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-            // Даже если пользователь уже существует, продолжаем (для входа)
       await _apiClient.requestCode(email: email, phone: phone);
       state = state.copyWith(status: AuthStatus.unauthenticated);
       return true;
@@ -92,17 +89,43 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<bool> login({
+  Future<bool> loginWithCode({
     String? email,
     String? phone,
     required String code,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
-      final authResponse = await _apiClient.login(
+      final authResponse = await _apiClient.loginWithCode(
         email: email,
         phone: phone,
         code: code,
+      );
+      await _tokenStorage.saveTokens(
+        authResponse.accessToken,
+        authResponse.refreshToken,
+      );
+      final user = await _apiClient.getCurrentUser();
+      state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: _parseError(e),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> loginWithPassword({
+    required String username,
+    required String password,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+    try {
+      final authResponse = await _apiClient.loginWithPassword(
+        username: username,
+        password: password,
       );
       await _tokenStorage.saveTokens(
         authResponse.accessToken,

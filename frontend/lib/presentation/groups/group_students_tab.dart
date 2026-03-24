@@ -33,6 +33,7 @@ class GroupStudentsNotifier extends AsyncNotifier<List<Student>> {
       await reload();
       return true;
     } catch (e) {
+      debugPrint('Error adding student to group: $e');
       return false;
     }
   }
@@ -43,11 +44,14 @@ class GroupStudentsNotifier extends AsyncNotifier<List<Student>> {
       await ref
           .read(apiClientProvider)
           .removeStudentFromGroup(_groupId, studentId);
+      // Обновляем состояние локально без полной перезагрузки
+      final currentStudents = state.value ?? [];
       state = AsyncValue.data(
-        (state.value ?? []).where((s) => s.id != studentId).toList(),
+        currentStudents.where((s) => s.id != studentId).toList(),
       );
       return true;
     } catch (e) {
+      debugPrint('Error removing student from group: $e');
       return false;
     }
   }
@@ -106,19 +110,72 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                      )
+                    : null,
               ),
             ),
           ),
           Expanded(
             child: groupStudentsAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (e, _) =>
-                  Center(child: Text('Ошибка загрузки студентов: $e')),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, stackTrace) {
+                debugPrint('Error loading students: $e');
+                debugPrint('StackTrace: $stackTrace');
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Ошибка загрузки студентов: $e'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(groupStudentsProvider(widget.groupId)
+                                  .notifier)
+                              .reload();
+                        },
+                        child: const Text('Повторить'),
+                      ),
+                    ],
+                  ),
+                );
+              },
               data: (students) {
                 final filtered = _applyFilter(students);
                 if (filtered.isEmpty) {
-                  return const Center(child: Text('Нет студентов в группе'));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.people_outline,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Нет студентов в группе'),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: () => _showAddOptions(context),
+                          icon: const Icon(Icons.person_add),
+                          label: const Text('Добавить студента'),
+                        ),
+                      ],
+                    ),
+                  );
                 }
                 return RefreshIndicator(
                   onRefresh: () => ref
@@ -142,8 +199,8 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                                 Icons.edit,
                                 color: Colors.blue,
                               ),
-                              onPressed: () =>
-                                  _editStudent(context, student),
+                              onPressed: () => _editStudent(context, student),
+                              tooltip: 'Редактировать',
                             ),
                             IconButton(
                               icon: const Icon(
@@ -151,10 +208,8 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                                 color: Colors.red,
                               ),
                               onPressed: () =>
-                                  _removeStudentFromGroup(
-                                    context,
-                                    student.id,
-                                  ),
+                                  _removeStudentFromGroup(context, student.id),
+                              tooltip: 'Удалить из группы',
                             ),
                           ],
                         ),
@@ -170,6 +225,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddOptions(context),
         child: const Icon(Icons.person_add),
+        tooltip: 'Добавить студента',
       ),
     );
   }
@@ -203,7 +259,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-    // Создание нового студента через API, затем добавление в группу
+  // Создание нового студента через API, затем добавление в группу
   void _createNewStudent(BuildContext context) {
     final nameController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -216,9 +272,11 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
           key: formKey,
           child: TextFormField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'Имя студента'),
-            validator: (v) =>
-                v == null || v.isEmpty ? 'Введите имя' : null,
+            decoration: const InputDecoration(
+              labelText: 'Имя студента',
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
           ),
         ),
         actions: [
@@ -232,6 +290,14 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
               final name = nameController.text.trim();
               Navigator.pop(ctx);
 
+              // Показываем индикатор загрузки
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Создание студента...'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+
               // Создаём студента через API
               final newStudent = await ref
                   .read(allStudentsProvider.notifier)
@@ -242,6 +308,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Не удалось создать студента'),
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
@@ -257,6 +324,14 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Студент создан, но не добавлен в группу'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Студент успешно добавлен'),
+                    backgroundColor: Colors.green,
                   ),
                 );
               }
@@ -268,16 +343,14 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-    // Диалог выбора существующего студента из общего списка
+  // Диалог выбора существующего студента из общего списка
   void _showExistingStudentsDialog(BuildContext context) {
     final allStudentsAsync = ref.read(allStudentsProvider);
-    final groupStudents =
-        ref.read(groupStudentsProvider(widget.groupId)).value ?? [];
+    final groupStudents = ref.read(groupStudentsProvider(widget.groupId)).value ?? [];
     final existingIds = groupStudents.map((s) => s.id).toSet();
 
     final allStudents = allStudentsAsync.value ?? [];
-    final available =
-        allStudents.where((s) => !existingIds.contains(s.id)).toList();
+    final available = allStudents.where((s) => !existingIds.contains(s.id)).toList();
 
     if (available.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -294,6 +367,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
         title: const Text('Выберите студента'),
         content: SizedBox(
           width: double.maxFinite,
+          height: 400,
           child: ListView.builder(
             shrinkWrap: true,
             itemCount: available.length,
@@ -304,17 +378,32 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                 subtitle: Text('Очки: ${student.dutyScore}'),
                 onTap: () async {
                   Navigator.pop(ctx);
+                  
+                  // Показываем индикатор загрузки
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Добавление студента...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                  
                   // Добавляем студента в группу через API
                   final ok = await ref
-                      .read(
-                        groupStudentsProvider(widget.groupId).notifier,
-                      )
+                      .read(groupStudentsProvider(widget.groupId).notifier)
                       .addStudentToGroup(student.id);
 
                   if (!ok && context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Не удалось добавить студента в группу'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  } else if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Студент добавлен в группу'),
+                        backgroundColor: Colors.green,
                       ),
                     );
                   }
@@ -333,7 +422,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-    // Редактирование студента через API
+  // Редактирование студента через API
   void _editStudent(BuildContext context, Student student) {
     final nameController = TextEditingController(text: student.name);
     bool isActive = student.isActive;
@@ -351,16 +440,17 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
               children: [
                 TextFormField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Имя'),
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Введите имя' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Имя',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) => v == null || v.isEmpty ? 'Введите имя' : null,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 SwitchListTile(
                   title: const Text('Активен'),
                   value: isActive,
-                  onChanged: (val) =>
-                      setDialogState(() => isActive = val),
+                  onChanged: (val) => setDialogState(() => isActive = val),
                 ),
               ],
             ),
@@ -387,14 +477,21 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
                 // Перезагружаем студентов группы чтобы отобразить изменения
                 if (ok) {
                   await ref
-                      .read(
-                        groupStudentsProvider(widget.groupId).notifier,
-                      )
+                      .read(groupStudentsProvider(widget.groupId).notifier)
                       .reload();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Студент обновлён'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
                 } else if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Не удалось обновить студента'),
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
@@ -407,7 +504,7 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
     );
   }
 
-    // Удаление студента из группы через API
+  // Удаление студента из группы через API
   void _removeStudentFromGroup(BuildContext context, int studentId) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -423,7 +520,10 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Удалить'),
           ),
         ],
@@ -439,6 +539,14 @@ class _GroupStudentsTabState extends ConsumerState<GroupStudentsTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Не удалось удалить студента из группы'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Студент удалён из группы'),
+          backgroundColor: Colors.green,
         ),
       );
     }

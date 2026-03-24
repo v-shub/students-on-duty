@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Absence {
 
- int get id; int get studentId; DateTime get dateFrom; DateTime get dateTo; String? get reason; bool get isApproved;
+ int get id;@JsonKey(name: 'student_id') int get studentId;@JsonKey(name: 'date_from') DateTime get dateFrom;@JsonKey(name: 'date_to') DateTime get dateTo; String? get reason;@JsonKey(name: 'is_approved') bool get isApproved;
 /// Create a copy of Absence
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AbsenceCopyWith<$Res>  {
   factory $AbsenceCopyWith(Absence value, $Res Function(Absence) _then) = _$AbsenceCopyWithImpl;
 @useResult
 $Res call({
- int id, int studentId, DateTime dateFrom, DateTime dateTo, String? reason, bool isApproved
+ int id,@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'date_from') DateTime dateFrom,@JsonKey(name: 'date_to') DateTime dateTo, String? reason,@JsonKey(name: 'is_approved') bool isApproved
 });
 
 
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int studentId,  DateTime dateFrom,  DateTime dateTo,  String? reason,  bool isApproved)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  DateTime dateFrom, @JsonKey(name: 'date_to')  DateTime dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool isApproved)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Absence() when $default != null:
 return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -179,7 +179,7 @@ return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reaso
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int studentId,  DateTime dateFrom,  DateTime dateTo,  String? reason,  bool isApproved)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  DateTime dateFrom, @JsonKey(name: 'date_to')  DateTime dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool isApproved)  $default,) {final _that = this;
 switch (_that) {
 case _Absence():
 return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -199,7 +199,7 @@ return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reaso
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int studentId,  DateTime dateFrom,  DateTime dateTo,  String? reason,  bool isApproved)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  DateTime dateFrom, @JsonKey(name: 'date_to')  DateTime dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool isApproved)?  $default,) {final _that = this;
 switch (_that) {
 case _Absence() when $default != null:
 return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -214,15 +214,15 @@ return $default(_that.id,_that.studentId,_that.dateFrom,_that.dateTo,_that.reaso
 @JsonSerializable()
 
 class _Absence implements Absence {
-  const _Absence({required this.id, required this.studentId, required this.dateFrom, required this.dateTo, this.reason, this.isApproved = false});
+  const _Absence({required this.id, @JsonKey(name: 'student_id') required this.studentId, @JsonKey(name: 'date_from') required this.dateFrom, @JsonKey(name: 'date_to') required this.dateTo, this.reason, @JsonKey(name: 'is_approved') this.isApproved = false});
   factory _Absence.fromJson(Map<String, dynamic> json) => _$AbsenceFromJson(json);
 
 @override final  int id;
-@override final  int studentId;
-@override final  DateTime dateFrom;
-@override final  DateTime dateTo;
+@override@JsonKey(name: 'student_id') final  int studentId;
+@override@JsonKey(name: 'date_from') final  DateTime dateFrom;
+@override@JsonKey(name: 'date_to') final  DateTime dateTo;
 @override final  String? reason;
-@override@JsonKey() final  bool isApproved;
+@override@JsonKey(name: 'is_approved') final  bool isApproved;
 
 /// Create a copy of Absence
 /// with the given fields replaced by the non-null parameter values.
@@ -257,7 +257,7 @@ abstract mixin class _$AbsenceCopyWith<$Res> implements $AbsenceCopyWith<$Res> {
   factory _$AbsenceCopyWith(_Absence value, $Res Function(_Absence) _then) = __$AbsenceCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int studentId, DateTime dateFrom, DateTime dateTo, String? reason, bool isApproved
+ int id,@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'date_from') DateTime dateFrom,@JsonKey(name: 'date_to') DateTime dateTo, String? reason,@JsonKey(name: 'is_approved') bool isApproved
 });
 
 

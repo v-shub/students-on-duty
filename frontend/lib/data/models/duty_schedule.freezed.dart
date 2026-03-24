@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DutySchedule {
 
- int get id; int get groupId; int get dutyTypeId; int get studentsPerDay; DateTime get startDate; DateTime? get endDate; bool get isActive;
+ int get id;@JsonKey(name: 'group_id') int get groupId;@JsonKey(name: 'duty_type_id') int get dutyTypeId;@JsonKey(name: 'students_per_day') int get studentsPerDay;@JsonKey(name: 'start_date') DateTime get startDate;@JsonKey(name: 'end_date') DateTime? get endDate;@JsonKey(name: 'is_active') bool get isActive;
 /// Create a copy of DutySchedule
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $DutyScheduleCopyWith<$Res>  {
   factory $DutyScheduleCopyWith(DutySchedule value, $Res Function(DutySchedule) _then) = _$DutyScheduleCopyWithImpl;
 @useResult
 $Res call({
- int id, int groupId, int dutyTypeId, int studentsPerDay, DateTime startDate, DateTime? endDate, bool isActive
+ int id,@JsonKey(name: 'group_id') int groupId,@JsonKey(name: 'duty_type_id') int dutyTypeId,@JsonKey(name: 'students_per_day') int studentsPerDay,@JsonKey(name: 'start_date') DateTime startDate,@JsonKey(name: 'end_date') DateTime? endDate,@JsonKey(name: 'is_active') bool isActive
 });
 
 
@@ -159,7 +159,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int groupId,  int dutyTypeId,  int studentsPerDay,  DateTime startDate,  DateTime? endDate,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  DateTime startDate, @JsonKey(name: 'end_date')  DateTime? endDate, @JsonKey(name: 'is_active')  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DutySchedule() when $default != null:
 return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.isActive);case _:
@@ -180,7 +180,7 @@ return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int groupId,  int dutyTypeId,  int studentsPerDay,  DateTime startDate,  DateTime? endDate,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  DateTime startDate, @JsonKey(name: 'end_date')  DateTime? endDate, @JsonKey(name: 'is_active')  bool isActive)  $default,) {final _that = this;
 switch (_that) {
 case _DutySchedule():
 return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.isActive);case _:
@@ -200,7 +200,7 @@ return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int groupId,  int dutyTypeId,  int studentsPerDay,  DateTime startDate,  DateTime? endDate,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id, @JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  DateTime startDate, @JsonKey(name: 'end_date')  DateTime? endDate, @JsonKey(name: 'is_active')  bool isActive)?  $default,) {final _that = this;
 switch (_that) {
 case _DutySchedule() when $default != null:
 return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.isActive);case _:
@@ -215,16 +215,16 @@ return $default(_that.id,_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_th
 @JsonSerializable()
 
 class _DutySchedule implements DutySchedule {
-  const _DutySchedule({required this.id, required this.groupId, required this.dutyTypeId, required this.studentsPerDay, required this.startDate, this.endDate, this.isActive = true});
+  const _DutySchedule({required this.id, @JsonKey(name: 'group_id') required this.groupId, @JsonKey(name: 'duty_type_id') required this.dutyTypeId, @JsonKey(name: 'students_per_day') required this.studentsPerDay, @JsonKey(name: 'start_date') required this.startDate, @JsonKey(name: 'end_date') this.endDate, @JsonKey(name: 'is_active') this.isActive = true});
   factory _DutySchedule.fromJson(Map<String, dynamic> json) => _$DutyScheduleFromJson(json);
 
 @override final  int id;
-@override final  int groupId;
-@override final  int dutyTypeId;
-@override final  int studentsPerDay;
-@override final  DateTime startDate;
-@override final  DateTime? endDate;
-@override@JsonKey() final  bool isActive;
+@override@JsonKey(name: 'group_id') final  int groupId;
+@override@JsonKey(name: 'duty_type_id') final  int dutyTypeId;
+@override@JsonKey(name: 'students_per_day') final  int studentsPerDay;
+@override@JsonKey(name: 'start_date') final  DateTime startDate;
+@override@JsonKey(name: 'end_date') final  DateTime? endDate;
+@override@JsonKey(name: 'is_active') final  bool isActive;
 
 /// Create a copy of DutySchedule
 /// with the given fields replaced by the non-null parameter values.
@@ -259,7 +259,7 @@ abstract mixin class _$DutyScheduleCopyWith<$Res> implements $DutyScheduleCopyWi
   factory _$DutyScheduleCopyWith(_DutySchedule value, $Res Function(_DutySchedule) _then) = __$DutyScheduleCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int groupId, int dutyTypeId, int studentsPerDay, DateTime startDate, DateTime? endDate, bool isActive
+ int id,@JsonKey(name: 'group_id') int groupId,@JsonKey(name: 'duty_type_id') int dutyTypeId,@JsonKey(name: 'students_per_day') int studentsPerDay,@JsonKey(name: 'start_date') DateTime startDate,@JsonKey(name: 'end_date') DateTime? endDate,@JsonKey(name: 'is_active') bool isActive
 });
 
 

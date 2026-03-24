@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateDutyScheduleDto {
 
- int get groupId; int get dutyTypeId; int get studentsPerDay; String get startDate; String? get endDate; Map<String, bool>? get dutyDays;
+@JsonKey(name: 'group_id') int get groupId;@JsonKey(name: 'duty_type_id') int get dutyTypeId;@JsonKey(name: 'students_per_day') int get studentsPerDay;@JsonKey(name: 'start_date') String get startDate;@JsonKey(name: 'end_date') String? get endDate;@JsonKey(name: 'duty_days') Map<String, bool>? get dutyDays;
 /// Create a copy of CreateDutyScheduleDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $CreateDutyScheduleDtoCopyWith<$Res>  {
   factory $CreateDutyScheduleDtoCopyWith(CreateDutyScheduleDto value, $Res Function(CreateDutyScheduleDto) _then) = _$CreateDutyScheduleDtoCopyWithImpl;
 @useResult
 $Res call({
- int groupId, int dutyTypeId, int studentsPerDay, String startDate, String? endDate, Map<String, bool>? dutyDays
+@JsonKey(name: 'group_id') int groupId,@JsonKey(name: 'duty_type_id') int dutyTypeId,@JsonKey(name: 'students_per_day') int studentsPerDay,@JsonKey(name: 'start_date') String startDate,@JsonKey(name: 'end_date') String? endDate,@JsonKey(name: 'duty_days') Map<String, bool>? dutyDays
 });
 
 
@@ -158,7 +158,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int groupId,  int dutyTypeId,  int studentsPerDay,  String startDate,  String? endDate,  Map<String, bool>? dutyDays)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  String startDate, @JsonKey(name: 'end_date')  String? endDate, @JsonKey(name: 'duty_days')  Map<String, bool>? dutyDays)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateDutyScheduleDto() when $default != null:
 return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.dutyDays);case _:
@@ -179,7 +179,7 @@ return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startD
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int groupId,  int dutyTypeId,  int studentsPerDay,  String startDate,  String? endDate,  Map<String, bool>? dutyDays)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  String startDate, @JsonKey(name: 'end_date')  String? endDate, @JsonKey(name: 'duty_days')  Map<String, bool>? dutyDays)  $default,) {final _that = this;
 switch (_that) {
 case _CreateDutyScheduleDto():
 return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.dutyDays);case _:
@@ -199,7 +199,7 @@ return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startD
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int groupId,  int dutyTypeId,  int studentsPerDay,  String startDate,  String? endDate,  Map<String, bool>? dutyDays)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'group_id')  int groupId, @JsonKey(name: 'duty_type_id')  int dutyTypeId, @JsonKey(name: 'students_per_day')  int studentsPerDay, @JsonKey(name: 'start_date')  String startDate, @JsonKey(name: 'end_date')  String? endDate, @JsonKey(name: 'duty_days')  Map<String, bool>? dutyDays)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateDutyScheduleDto() when $default != null:
 return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startDate,_that.endDate,_that.dutyDays);case _:
@@ -214,16 +214,16 @@ return $default(_that.groupId,_that.dutyTypeId,_that.studentsPerDay,_that.startD
 @JsonSerializable()
 
 class _CreateDutyScheduleDto implements CreateDutyScheduleDto {
-  const _CreateDutyScheduleDto({required this.groupId, required this.dutyTypeId, required this.studentsPerDay, required this.startDate, this.endDate, final  Map<String, bool>? dutyDays}): _dutyDays = dutyDays;
+  const _CreateDutyScheduleDto({@JsonKey(name: 'group_id') required this.groupId, @JsonKey(name: 'duty_type_id') required this.dutyTypeId, @JsonKey(name: 'students_per_day') required this.studentsPerDay, @JsonKey(name: 'start_date') required this.startDate, @JsonKey(name: 'end_date') this.endDate, @JsonKey(name: 'duty_days') final  Map<String, bool>? dutyDays}): _dutyDays = dutyDays;
   factory _CreateDutyScheduleDto.fromJson(Map<String, dynamic> json) => _$CreateDutyScheduleDtoFromJson(json);
 
-@override final  int groupId;
-@override final  int dutyTypeId;
-@override final  int studentsPerDay;
-@override final  String startDate;
-@override final  String? endDate;
+@override@JsonKey(name: 'group_id') final  int groupId;
+@override@JsonKey(name: 'duty_type_id') final  int dutyTypeId;
+@override@JsonKey(name: 'students_per_day') final  int studentsPerDay;
+@override@JsonKey(name: 'start_date') final  String startDate;
+@override@JsonKey(name: 'end_date') final  String? endDate;
  final  Map<String, bool>? _dutyDays;
-@override Map<String, bool>? get dutyDays {
+@override@JsonKey(name: 'duty_days') Map<String, bool>? get dutyDays {
   final value = _dutyDays;
   if (value == null) return null;
   if (_dutyDays is EqualUnmodifiableMapView) return _dutyDays;
@@ -265,7 +265,7 @@ abstract mixin class _$CreateDutyScheduleDtoCopyWith<$Res> implements $CreateDut
   factory _$CreateDutyScheduleDtoCopyWith(_CreateDutyScheduleDto value, $Res Function(_CreateDutyScheduleDto) _then) = __$CreateDutyScheduleDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int groupId, int dutyTypeId, int studentsPerDay, String startDate, String? endDate, Map<String, bool>? dutyDays
+@JsonKey(name: 'group_id') int groupId,@JsonKey(name: 'duty_type_id') int dutyTypeId,@JsonKey(name: 'students_per_day') int studentsPerDay,@JsonKey(name: 'start_date') String startDate,@JsonKey(name: 'end_date') String? endDate,@JsonKey(name: 'duty_days') Map<String, bool>? dutyDays
 });
 
 

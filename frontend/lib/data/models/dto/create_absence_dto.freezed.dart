@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CreateAbsenceDto {
 
- int get studentId; String get dateFrom; String get dateTo; String? get reason; bool? get isApproved;
+@JsonKey(name: 'student_id') int get studentId;@JsonKey(name: 'date_from') String get dateFrom;@JsonKey(name: 'date_to') String get dateTo; String? get reason;@JsonKey(name: 'is_approved') bool? get isApproved;
 /// Create a copy of CreateAbsenceDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $CreateAbsenceDtoCopyWith<$Res>  {
   factory $CreateAbsenceDtoCopyWith(CreateAbsenceDto value, $Res Function(CreateAbsenceDto) _then) = _$CreateAbsenceDtoCopyWithImpl;
 @useResult
 $Res call({
- int studentId, String dateFrom, String dateTo, String? reason, bool? isApproved
+@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'date_from') String dateFrom,@JsonKey(name: 'date_to') String dateTo, String? reason,@JsonKey(name: 'is_approved') bool? isApproved
 });
 
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int studentId,  String dateFrom,  String dateTo,  String? reason,  bool? isApproved)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  String dateFrom, @JsonKey(name: 'date_to')  String dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool? isApproved)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateAbsenceDto() when $default != null:
 return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -178,7 +178,7 @@ return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int studentId,  String dateFrom,  String dateTo,  String? reason,  bool? isApproved)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  String dateFrom, @JsonKey(name: 'date_to')  String dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool? isApproved)  $default,) {final _that = this;
 switch (_that) {
 case _CreateAbsenceDto():
 return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -198,7 +198,7 @@ return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.i
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int studentId,  String dateFrom,  String dateTo,  String? reason,  bool? isApproved)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'date_from')  String dateFrom, @JsonKey(name: 'date_to')  String dateTo,  String? reason, @JsonKey(name: 'is_approved')  bool? isApproved)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateAbsenceDto() when $default != null:
 return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.isApproved);case _:
@@ -213,14 +213,14 @@ return $default(_that.studentId,_that.dateFrom,_that.dateTo,_that.reason,_that.i
 @JsonSerializable()
 
 class _CreateAbsenceDto implements CreateAbsenceDto {
-  const _CreateAbsenceDto({required this.studentId, required this.dateFrom, required this.dateTo, this.reason, this.isApproved});
+  const _CreateAbsenceDto({@JsonKey(name: 'student_id') required this.studentId, @JsonKey(name: 'date_from') required this.dateFrom, @JsonKey(name: 'date_to') required this.dateTo, this.reason, @JsonKey(name: 'is_approved') this.isApproved});
   factory _CreateAbsenceDto.fromJson(Map<String, dynamic> json) => _$CreateAbsenceDtoFromJson(json);
 
-@override final  int studentId;
-@override final  String dateFrom;
-@override final  String dateTo;
+@override@JsonKey(name: 'student_id') final  int studentId;
+@override@JsonKey(name: 'date_from') final  String dateFrom;
+@override@JsonKey(name: 'date_to') final  String dateTo;
 @override final  String? reason;
-@override final  bool? isApproved;
+@override@JsonKey(name: 'is_approved') final  bool? isApproved;
 
 /// Create a copy of CreateAbsenceDto
 /// with the given fields replaced by the non-null parameter values.
@@ -255,7 +255,7 @@ abstract mixin class _$CreateAbsenceDtoCopyWith<$Res> implements $CreateAbsenceD
   factory _$CreateAbsenceDtoCopyWith(_CreateAbsenceDto value, $Res Function(_CreateAbsenceDto) _then) = __$CreateAbsenceDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int studentId, String dateFrom, String dateTo, String? reason, bool? isApproved
+@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'date_from') String dateFrom,@JsonKey(name: 'date_to') String dateTo, String? reason,@JsonKey(name: 'is_approved') bool? isApproved
 });
 
 

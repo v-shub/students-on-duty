@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UpdateDutyTypeDto {
 
- String? get name; String? get description; int? get defaultScore;
+ String? get name; String? get description;@JsonKey(name: 'default_score') int? get defaultScore;
 /// Create a copy of UpdateDutyTypeDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $UpdateDutyTypeDtoCopyWith<$Res>  {
   factory $UpdateDutyTypeDtoCopyWith(UpdateDutyTypeDto value, $Res Function(UpdateDutyTypeDto) _then) = _$UpdateDutyTypeDtoCopyWithImpl;
 @useResult
 $Res call({
- String? name, String? description, int? defaultScore
+ String? name, String? description,@JsonKey(name: 'default_score') int? defaultScore
 });
 
 
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? name,  String? description,  int? defaultScore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? name,  String? description, @JsonKey(name: 'default_score')  int? defaultScore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UpdateDutyTypeDto() when $default != null:
 return $default(_that.name,_that.description,_that.defaultScore);case _:
@@ -176,7 +176,7 @@ return $default(_that.name,_that.description,_that.defaultScore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? name,  String? description,  int? defaultScore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? name,  String? description, @JsonKey(name: 'default_score')  int? defaultScore)  $default,) {final _that = this;
 switch (_that) {
 case _UpdateDutyTypeDto():
 return $default(_that.name,_that.description,_that.defaultScore);case _:
@@ -196,7 +196,7 @@ return $default(_that.name,_that.description,_that.defaultScore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? name,  String? description,  int? defaultScore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? name,  String? description, @JsonKey(name: 'default_score')  int? defaultScore)?  $default,) {final _that = this;
 switch (_that) {
 case _UpdateDutyTypeDto() when $default != null:
 return $default(_that.name,_that.description,_that.defaultScore);case _:
@@ -211,12 +211,12 @@ return $default(_that.name,_that.description,_that.defaultScore);case _:
 @JsonSerializable()
 
 class _UpdateDutyTypeDto implements UpdateDutyTypeDto {
-  const _UpdateDutyTypeDto({this.name, this.description, this.defaultScore});
+  const _UpdateDutyTypeDto({this.name, this.description, @JsonKey(name: 'default_score') this.defaultScore});
   factory _UpdateDutyTypeDto.fromJson(Map<String, dynamic> json) => _$UpdateDutyTypeDtoFromJson(json);
 
 @override final  String? name;
 @override final  String? description;
-@override final  int? defaultScore;
+@override@JsonKey(name: 'default_score') final  int? defaultScore;
 
 /// Create a copy of UpdateDutyTypeDto
 /// with the given fields replaced by the non-null parameter values.
@@ -251,7 +251,7 @@ abstract mixin class _$UpdateDutyTypeDtoCopyWith<$Res> implements $UpdateDutyTyp
   factory _$UpdateDutyTypeDtoCopyWith(_UpdateDutyTypeDto value, $Res Function(_UpdateDutyTypeDto) _then) = __$UpdateDutyTypeDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String? name, String? description, int? defaultScore
+ String? name, String? description,@JsonKey(name: 'default_score') int? defaultScore
 });
 
 

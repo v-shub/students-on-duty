@@ -8,26 +8,26 @@ part of 'api_client.dart';
 
 _AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>
     _AuthResponse(
-      accessToken: json['access_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      accessToken: json['accessToken'] as String,
+      refreshToken: json['refreshToken'] as String,
     );
 
 Map<String, dynamic> _$AuthResponseToJson(_AuthResponse instance) =>
     <String, dynamic>{
-      'access_token': instance.accessToken,
-      'refresh_token': instance.refreshToken,
+      'accessToken': instance.accessToken,
+      'refreshToken': instance.refreshToken,
     };
 
 _RefreshResponse _$RefreshResponseFromJson(Map<String, dynamic> json) =>
     _RefreshResponse(
-      accessToken: json['access_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      accessToken: json['accessToken'] as String,
+      refreshToken: json['refreshToken'] as String,
     );
 
 Map<String, dynamic> _$RefreshResponseToJson(_RefreshResponse instance) =>
     <String, dynamic>{
-      'access_token': instance.accessToken,
-      'refresh_token': instance.refreshToken,
+      'accessToken': instance.accessToken,
+      'refreshToken': instance.refreshToken,
     };
 
 // **************************************************************************

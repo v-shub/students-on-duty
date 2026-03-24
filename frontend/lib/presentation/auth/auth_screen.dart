@@ -1,4 +1,3 @@
-// lib/presentation/auth/auth_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/constants/app_colors.dart';
@@ -13,20 +12,25 @@ class AuthScreen extends ConsumerStatefulWidget {
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Поля для входа по коду/регистрации
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _codeController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  // Поля для входа по паролю
+  final _usernameLoginController = TextEditingController();
+  final _passwordLoginController = TextEditingController();
 
   bool _isRegistration = false;
   bool _codeSent = false;
+  bool _usePasswordLogin = false;
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    // В методе build внутри слушателя:
 
     String? lastErrorMessage;
 
@@ -98,7 +102,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (!_codeSent) ...[
-                          // Этап 1: ввод email/телефона
+                          // Заголовок
                           const Text(
                             'Добро пожаловать!',
                             style: TextStyle(
@@ -110,7 +114,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Введите email или телефон для получения кода',
+                            _isRegistration
+                                ? 'Создайте новый аккаунт'
+                                : (_usePasswordLogin
+                                    ? 'Войдите с помощью пароля'
+                                    : 'Войдите с помощью кода подтверждения'),
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textSecondary,
@@ -119,98 +127,242 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           ),
                           const SizedBox(height: 32),
 
-                          // Поле email
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: TextFormField(
-                              controller: _emailController,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                labelStyle: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.email,
-                                  color: AppColors.primaryDark,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'или',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 8),
-
-                          // Поле телефон
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: TextFormField(
-                              controller: _phoneController,
-                              decoration: InputDecoration(
-                                labelText: 'Телефон',
-                                labelStyle: TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.phone,
-                                  color: AppColors.primaryDark,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 14,
-                                ),
-                              ),
-                              keyboardType: TextInputType.phone,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Кнопка получения кода
-                          ElevatedButton(
-                            onPressed: authState.status == AuthStatus.loading
-                                ? null
-                                : _requestCode,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.black,
-                              minimumSize: const Size(double.infinity, 54),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 4,
-                            ),
-                            child: authState.status == AuthStatus.loading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.black,
-                                  )
-                                : const Text(
-                                    'Получить код',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                          // Переключатель метода входа (только для входа, не для регистрации)
+                          if (!_isRegistration) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('По коду'),
+                                  selected: !_usePasswordLogin,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _usePasswordLogin = !selected;
+                                      // Очищаем поля при переключении
+                                      _emailController.clear();
+                                      _phoneController.clear();
+                                      _usernameLoginController.clear();
+                                      _passwordLoginController.clear();
+                                    });
+                                  },
+                                  selectedColor: AppColors.primary,
+                                  backgroundColor: Colors.grey.shade200,
+                                  labelStyle: TextStyle(
+                                    color: !_usePasswordLogin
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
                                   ),
-                          ),
+                                ),
+                                const SizedBox(width: 12),
+                                ChoiceChip(
+                                  label: const Text('По паролю'),
+                                  selected: _usePasswordLogin,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _usePasswordLogin = selected;
+                                      // Очищаем поля при переключении
+                                      _emailController.clear();
+                                      _phoneController.clear();
+                                      _usernameLoginController.clear();
+                                      _passwordLoginController.clear();
+                                    });
+                                  },
+                                  selectedColor: AppColors.primary,
+                                  backgroundColor: Colors.grey.shade200,
+                                  labelStyle: TextStyle(
+                                    color: _usePasswordLogin
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+
+                          // Динамические поля в зависимости от выбранного метода
+                          if (!_isRegistration && _usePasswordLogin) ...[
+                            // Вход по паролю - показываем поля username и пароль
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: TextFormField(
+                                controller: _usernameLoginController,
+                                decoration: InputDecoration(
+                                  labelText: 'Имя пользователя',
+                                  labelStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Введите имя пользователя';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: TextFormField(
+                                controller: _passwordLoginController,
+                                decoration: InputDecoration(
+                                  labelText: 'Пароль',
+                                  labelStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.lock,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                obscureText: true,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Введите пароль';
+                                  }
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              onPressed: authState.status == AuthStatus.loading
+                                  ? null
+                                  : _loginWithPassword,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.black,
+                                minimumSize: const Size(double.infinity, 54),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 4,
+                              ),
+                              child: authState.status == AuthStatus.loading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.black,
+                                    )
+                                  : const Text(
+                                      'Войти',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ] else ...[
+                            // Вход по коду или регистрация - показываем поля email/телефон
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: TextFormField(
+                                controller: _emailController,
+                                decoration: InputDecoration(
+                                  labelText: 'Email',
+                                  labelStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.email,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'или',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                            const SizedBox(height: 8),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: TextFormField(
+                                controller: _phoneController,
+                                decoration: InputDecoration(
+                                  labelText: 'Телефон',
+                                  labelStyle: TextStyle(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.phone,
+                                    color: AppColors.primaryDark,
+                                  ),
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                keyboardType: TextInputType.phone,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              onPressed: authState.status == AuthStatus.loading
+                                  ? null
+                                  : _requestCode,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.black,
+                                minimumSize: const Size(double.infinity, 54),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 4,
+                              ),
+                              child: authState.status == AuthStatus.loading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.black,
+                                    )
+                                  : const Text(
+                                      'Получить код',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ],
                         ] else ...[
-                          // Этап 2: ввод кода
+                          // Этап 2: ввод кода (только для входа по коду и регистрации)
                           const Text(
                             'Подтверждение',
                             style: TextStyle(
@@ -254,6 +406,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   horizontal: 16,
                                   vertical: 14,
                                 ),
+                                counterText: '',
                               ),
                               keyboardType: TextInputType.number,
                               maxLength: 6,
@@ -354,7 +507,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             onPressed: () {
                               setState(() {
                                 _codeSent = false;
-                                _isRegistration = false;
                                 _codeController.clear();
                               });
                             },
@@ -365,8 +517,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           ),
                         ],
 
-                        // Переключатель между входом и регистрацией (только на первом этапе)
-                        if (!_codeSent) ...[
+                        // Переключатель между входом и регистрацией 
+                        // (только на первом этапе и не для парольного входа)
+                        if (!_codeSent && 
+                            !(!_isRegistration && _usePasswordLogin)) ...[
                           const SizedBox(height: 24),
                           Row(
                             children: [
@@ -398,6 +552,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             onPressed: () {
                               setState(() {
                                 _isRegistration = !_isRegistration;
+                                _usePasswordLogin = false;
+                                _codeSent = false;
+                                _emailController.clear();
+                                _phoneController.clear();
+                                _usernameLoginController.clear();
+                                _passwordLoginController.clear();
+                                _codeController.clear();
                               });
                             },
                             style: TextButton.styleFrom(
@@ -452,6 +613,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _loginWithPassword() async {
+    if (_usernameLoginController.text.isEmpty ||
+        _passwordLoginController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Введите имя пользователя и пароль'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    final success = await ref.read(authProvider.notifier).loginWithPassword(
+          username: _usernameLoginController.text,
+          password: _passwordLoginController.text,
+        );
+
+    if (!success && mounted) {
+      // Ошибка уже показывается через listener
+    }
+  }
+
   Future<void> _verifyCode() async {
     if (_codeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -491,7 +674,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } else {
       success = await ref
           .read(authProvider.notifier)
-          .login(
+          .loginWithCode(
             email: _emailController.text.isNotEmpty
                 ? _emailController.text
                 : null,
@@ -514,6 +697,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     _codeController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _usernameLoginController.dispose();
+    _passwordLoginController.dispose();
     super.dispose();
   }
 }

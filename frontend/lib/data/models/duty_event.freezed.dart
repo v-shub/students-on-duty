@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DutyEvent {
 
- int get id; int get studentId; int get scheduleId; DateTime get dutyDate; DutyEventStatus get status; int? get scoreEarned; String? get notes; DateTime? get assignedAt;
+ int get id;@JsonKey(name: 'student_id') int get studentId;@JsonKey(name: 'schedule_id') int get scheduleId;@JsonKey(name: 'duty_date') DateTime get dutyDate; DutyEventStatus get status;@JsonKey(name: 'score_earned') int? get scoreEarned; String? get notes;@JsonKey(name: 'assigned_at') DateTime? get assignedAt;
 /// Create a copy of DutyEvent
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $DutyEventCopyWith<$Res>  {
   factory $DutyEventCopyWith(DutyEvent value, $Res Function(DutyEvent) _then) = _$DutyEventCopyWithImpl;
 @useResult
 $Res call({
- int id, int studentId, int scheduleId, DateTime dutyDate, DutyEventStatus status, int? scoreEarned, String? notes, DateTime? assignedAt
+ int id,@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'schedule_id') int scheduleId,@JsonKey(name: 'duty_date') DateTime dutyDate, DutyEventStatus status,@JsonKey(name: 'score_earned') int? scoreEarned, String? notes,@JsonKey(name: 'assigned_at') DateTime? assignedAt
 });
 
 
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int studentId,  int scheduleId,  DateTime dutyDate,  DutyEventStatus status,  int? scoreEarned,  String? notes,  DateTime? assignedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'duty_date')  DateTime dutyDate,  DutyEventStatus status, @JsonKey(name: 'score_earned')  int? scoreEarned,  String? notes, @JsonKey(name: 'assigned_at')  DateTime? assignedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DutyEvent() when $default != null:
 return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.status,_that.scoreEarned,_that.notes,_that.assignedAt);case _:
@@ -181,7 +181,7 @@ return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.s
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int studentId,  int scheduleId,  DateTime dutyDate,  DutyEventStatus status,  int? scoreEarned,  String? notes,  DateTime? assignedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'duty_date')  DateTime dutyDate,  DutyEventStatus status, @JsonKey(name: 'score_earned')  int? scoreEarned,  String? notes, @JsonKey(name: 'assigned_at')  DateTime? assignedAt)  $default,) {final _that = this;
 switch (_that) {
 case _DutyEvent():
 return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.status,_that.scoreEarned,_that.notes,_that.assignedAt);case _:
@@ -201,7 +201,7 @@ return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.s
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int studentId,  int scheduleId,  DateTime dutyDate,  DutyEventStatus status,  int? scoreEarned,  String? notes,  DateTime? assignedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id, @JsonKey(name: 'student_id')  int studentId, @JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'duty_date')  DateTime dutyDate,  DutyEventStatus status, @JsonKey(name: 'score_earned')  int? scoreEarned,  String? notes, @JsonKey(name: 'assigned_at')  DateTime? assignedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _DutyEvent() when $default != null:
 return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.status,_that.scoreEarned,_that.notes,_that.assignedAt);case _:
@@ -216,17 +216,17 @@ return $default(_that.id,_that.studentId,_that.scheduleId,_that.dutyDate,_that.s
 @JsonSerializable()
 
 class _DutyEvent implements DutyEvent {
-  const _DutyEvent({required this.id, required this.studentId, required this.scheduleId, required this.dutyDate, required this.status, this.scoreEarned, this.notes, this.assignedAt});
+  const _DutyEvent({required this.id, @JsonKey(name: 'student_id') required this.studentId, @JsonKey(name: 'schedule_id') required this.scheduleId, @JsonKey(name: 'duty_date') required this.dutyDate, required this.status, @JsonKey(name: 'score_earned') this.scoreEarned, this.notes, @JsonKey(name: 'assigned_at') this.assignedAt});
   factory _DutyEvent.fromJson(Map<String, dynamic> json) => _$DutyEventFromJson(json);
 
 @override final  int id;
-@override final  int studentId;
-@override final  int scheduleId;
-@override final  DateTime dutyDate;
+@override@JsonKey(name: 'student_id') final  int studentId;
+@override@JsonKey(name: 'schedule_id') final  int scheduleId;
+@override@JsonKey(name: 'duty_date') final  DateTime dutyDate;
 @override final  DutyEventStatus status;
-@override final  int? scoreEarned;
+@override@JsonKey(name: 'score_earned') final  int? scoreEarned;
 @override final  String? notes;
-@override final  DateTime? assignedAt;
+@override@JsonKey(name: 'assigned_at') final  DateTime? assignedAt;
 
 /// Create a copy of DutyEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -261,7 +261,7 @@ abstract mixin class _$DutyEventCopyWith<$Res> implements $DutyEventCopyWith<$Re
   factory _$DutyEventCopyWith(_DutyEvent value, $Res Function(_DutyEvent) _then) = __$DutyEventCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int studentId, int scheduleId, DateTime dutyDate, DutyEventStatus status, int? scoreEarned, String? notes, DateTime? assignedAt
+ int id,@JsonKey(name: 'student_id') int studentId,@JsonKey(name: 'schedule_id') int scheduleId,@JsonKey(name: 'duty_date') DateTime dutyDate, DutyEventStatus status,@JsonKey(name: 'score_earned') int? scoreEarned, String? notes,@JsonKey(name: 'assigned_at') DateTime? assignedAt
 });
 
 

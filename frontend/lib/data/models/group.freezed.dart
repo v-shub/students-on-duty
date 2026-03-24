@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Group {
 
- int get id; int? get userId;// опционально, так как сервер может не возвращать или быть null
- String get name; String? get description;
+ int get id;@JsonKey(name: 'user_id') int? get userId; String get name; String? get description;
 /// Create a copy of Group
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -49,7 +48,7 @@ abstract mixin class $GroupCopyWith<$Res>  {
   factory $GroupCopyWith(Group value, $Res Function(Group) _then) = _$GroupCopyWithImpl;
 @useResult
 $Res call({
- int id, int? userId, String name, String? description
+ int id,@JsonKey(name: 'user_id') int? userId, String name, String? description
 });
 
 
@@ -157,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int? userId,  String name,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'user_id')  int? userId,  String name,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Group() when $default != null:
 return $default(_that.id,_that.userId,_that.name,_that.description);case _:
@@ -178,7 +177,7 @@ return $default(_that.id,_that.userId,_that.name,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int? userId,  String name,  String? description)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id, @JsonKey(name: 'user_id')  int? userId,  String name,  String? description)  $default,) {final _that = this;
 switch (_that) {
 case _Group():
 return $default(_that.id,_that.userId,_that.name,_that.description);case _:
@@ -198,7 +197,7 @@ return $default(_that.id,_that.userId,_that.name,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int? userId,  String name,  String? description)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id, @JsonKey(name: 'user_id')  int? userId,  String name,  String? description)?  $default,) {final _that = this;
 switch (_that) {
 case _Group() when $default != null:
 return $default(_that.id,_that.userId,_that.name,_that.description);case _:
@@ -213,12 +212,11 @@ return $default(_that.id,_that.userId,_that.name,_that.description);case _:
 @JsonSerializable()
 
 class _Group implements Group {
-  const _Group({required this.id, this.userId, required this.name, this.description});
+  const _Group({required this.id, @JsonKey(name: 'user_id') this.userId, required this.name, this.description});
   factory _Group.fromJson(Map<String, dynamic> json) => _$GroupFromJson(json);
 
 @override final  int id;
-@override final  int? userId;
-// опционально, так как сервер может не возвращать или быть null
+@override@JsonKey(name: 'user_id') final  int? userId;
 @override final  String name;
 @override final  String? description;
 
@@ -255,7 +253,7 @@ abstract mixin class _$GroupCopyWith<$Res> implements $GroupCopyWith<$Res> {
   factory _$GroupCopyWith(_Group value, $Res Function(_Group) _then) = __$GroupCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int? userId, String name, String? description
+ int id,@JsonKey(name: 'user_id') int? userId, String name, String? description
 });
 
 

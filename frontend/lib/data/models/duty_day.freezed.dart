@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DutyDay {
 
- int get scheduleId; bool get isMonday; bool get isTuesday; bool get isWednesday; bool get isThursday; bool get isFriday; bool get isSaturday; bool get isSunday;
+@JsonKey(name: 'schedule_id') int get scheduleId;@JsonKey(name: 'is_monday') bool get isMonday;@JsonKey(name: 'is_tuesday') bool get isTuesday;@JsonKey(name: 'is_wednesday') bool get isWednesday;@JsonKey(name: 'is_thursday') bool get isThursday;@JsonKey(name: 'is_friday') bool get isFriday;@JsonKey(name: 'is_saturday') bool get isSaturday;@JsonKey(name: 'is_sunday') bool get isSunday;
 /// Create a copy of DutyDay
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $DutyDayCopyWith<$Res>  {
   factory $DutyDayCopyWith(DutyDay value, $Res Function(DutyDay) _then) = _$DutyDayCopyWithImpl;
 @useResult
 $Res call({
- int scheduleId, bool isMonday, bool isTuesday, bool isWednesday, bool isThursday, bool isFriday, bool isSaturday, bool isSunday
+@JsonKey(name: 'schedule_id') int scheduleId,@JsonKey(name: 'is_monday') bool isMonday,@JsonKey(name: 'is_tuesday') bool isTuesday,@JsonKey(name: 'is_wednesday') bool isWednesday,@JsonKey(name: 'is_thursday') bool isThursday,@JsonKey(name: 'is_friday') bool isFriday,@JsonKey(name: 'is_saturday') bool isSaturday,@JsonKey(name: 'is_sunday') bool isSunday
 });
 
 
@@ -160,7 +160,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'is_monday')  bool isMonday, @JsonKey(name: 'is_tuesday')  bool isTuesday, @JsonKey(name: 'is_wednesday')  bool isWednesday, @JsonKey(name: 'is_thursday')  bool isThursday, @JsonKey(name: 'is_friday')  bool isFriday, @JsonKey(name: 'is_saturday')  bool isSaturday, @JsonKey(name: 'is_sunday')  bool isSunday)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DutyDay() when $default != null:
 return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -181,7 +181,7 @@ return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesda
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'is_monday')  bool isMonday, @JsonKey(name: 'is_tuesday')  bool isTuesday, @JsonKey(name: 'is_wednesday')  bool isWednesday, @JsonKey(name: 'is_thursday')  bool isThursday, @JsonKey(name: 'is_friday')  bool isFriday, @JsonKey(name: 'is_saturday')  bool isSaturday, @JsonKey(name: 'is_sunday')  bool isSunday)  $default,) {final _that = this;
 switch (_that) {
 case _DutyDay():
 return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -201,7 +201,7 @@ return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesda
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int scheduleId,  bool isMonday,  bool isTuesday,  bool isWednesday,  bool isThursday,  bool isFriday,  bool isSaturday,  bool isSunday)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'schedule_id')  int scheduleId, @JsonKey(name: 'is_monday')  bool isMonday, @JsonKey(name: 'is_tuesday')  bool isTuesday, @JsonKey(name: 'is_wednesday')  bool isWednesday, @JsonKey(name: 'is_thursday')  bool isThursday, @JsonKey(name: 'is_friday')  bool isFriday, @JsonKey(name: 'is_saturday')  bool isSaturday, @JsonKey(name: 'is_sunday')  bool isSunday)?  $default,) {final _that = this;
 switch (_that) {
 case _DutyDay() when $default != null:
 return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesday,_that.isThursday,_that.isFriday,_that.isSaturday,_that.isSunday);case _:
@@ -216,17 +216,17 @@ return $default(_that.scheduleId,_that.isMonday,_that.isTuesday,_that.isWednesda
 @JsonSerializable()
 
 class _DutyDay implements DutyDay {
-  const _DutyDay({required this.scheduleId, this.isMonday = false, this.isTuesday = false, this.isWednesday = false, this.isThursday = false, this.isFriday = false, this.isSaturday = false, this.isSunday = false});
+  const _DutyDay({@JsonKey(name: 'schedule_id') required this.scheduleId, @JsonKey(name: 'is_monday') this.isMonday = false, @JsonKey(name: 'is_tuesday') this.isTuesday = false, @JsonKey(name: 'is_wednesday') this.isWednesday = false, @JsonKey(name: 'is_thursday') this.isThursday = false, @JsonKey(name: 'is_friday') this.isFriday = false, @JsonKey(name: 'is_saturday') this.isSaturday = false, @JsonKey(name: 'is_sunday') this.isSunday = false});
   factory _DutyDay.fromJson(Map<String, dynamic> json) => _$DutyDayFromJson(json);
 
-@override final  int scheduleId;
-@override@JsonKey() final  bool isMonday;
-@override@JsonKey() final  bool isTuesday;
-@override@JsonKey() final  bool isWednesday;
-@override@JsonKey() final  bool isThursday;
-@override@JsonKey() final  bool isFriday;
-@override@JsonKey() final  bool isSaturday;
-@override@JsonKey() final  bool isSunday;
+@override@JsonKey(name: 'schedule_id') final  int scheduleId;
+@override@JsonKey(name: 'is_monday') final  bool isMonday;
+@override@JsonKey(name: 'is_tuesday') final  bool isTuesday;
+@override@JsonKey(name: 'is_wednesday') final  bool isWednesday;
+@override@JsonKey(name: 'is_thursday') final  bool isThursday;
+@override@JsonKey(name: 'is_friday') final  bool isFriday;
+@override@JsonKey(name: 'is_saturday') final  bool isSaturday;
+@override@JsonKey(name: 'is_sunday') final  bool isSunday;
 
 /// Create a copy of DutyDay
 /// with the given fields replaced by the non-null parameter values.
@@ -261,7 +261,7 @@ abstract mixin class _$DutyDayCopyWith<$Res> implements $DutyDayCopyWith<$Res> {
   factory _$DutyDayCopyWith(_DutyDay value, $Res Function(_DutyDay) _then) = __$DutyDayCopyWithImpl;
 @override @useResult
 $Res call({
- int scheduleId, bool isMonday, bool isTuesday, bool isWednesday, bool isThursday, bool isFriday, bool isSaturday, bool isSunday
+@JsonKey(name: 'schedule_id') int scheduleId,@JsonKey(name: 'is_monday') bool isMonday,@JsonKey(name: 'is_tuesday') bool isTuesday,@JsonKey(name: 'is_wednesday') bool isWednesday,@JsonKey(name: 'is_thursday') bool isThursday,@JsonKey(name: 'is_friday') bool isFriday,@JsonKey(name: 'is_saturday') bool isSaturday,@JsonKey(name: 'is_sunday') bool isSunday
 });
 
 

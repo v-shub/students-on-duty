@@ -117,8 +117,8 @@ class ApiClient {
     }
   }
 
-  // В классе ApiClient замените метод requestCode:
-
+  // ==================== АУТЕНТИФИКАЦИЯ ====================
+  
   Future<RequestCodeResponse> requestCode({
     String? email,
     String? phone,
@@ -126,22 +126,22 @@ class ApiClient {
     try {
       final response = await _dio.post(
         '/users/request-code',
-        data: {'email': email, 'phone': phone},
+        data: {
+          if (email != null && email.isNotEmpty) 'email': email,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+        },
       );
-      // Если статус 200, код успешно отправлен
       return RequestCodeResponse(
         success: true,
         message: response.data['message'],
       );
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
-        // Конфликт - пользователь уже существует, но код всё равно может быть отправлен (для входа)
-        // В зависимости от реализации бэкенда, можно вернуть успех или специальный флаг.
-        // Предположим, что бэкенд всё равно отправляет код при 409 для существующего пользователя.
+        // Пользователь уже существует, но код отправлен
         return RequestCodeResponse(
           success: true,
           alreadyExists: true,
-          message: 'Пользователь уже существует, код отправлен',
+          message: e.response?.data['message'] ?? 'Код отправлен',
         );
       }
       rethrow;
@@ -161,27 +161,51 @@ class ApiClient {
         'code': code,
         'username': username,
         'password': password,
-        if (email != null) 'email': email,
-        if (phone != null) 'phone': phone,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
       },
     );
     return AuthResponse.fromJson(response.data);
   }
 
-  Future<AuthResponse> login({
+  Future<AuthResponse> loginWithCode({
     String? email,
     String? phone,
     required String code,
   }) async {
     final response = await _dio.post(
-      '/users/login',
+      '/users/login/code',
       data: {
-        if (email != null) 'email': email,
-        if (phone != null) 'phone': phone,
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
         'code': code,
       },
     );
     return AuthResponse.fromJson(response.data);
+  }
+
+  Future<AuthResponse> loginWithPassword({
+    required String username,
+    required String password,
+  }) async {
+    final response = await _dio.post(
+      '/users/login/password',
+      data: {
+        'username': username,
+        'password': password,
+      },
+    );
+    return AuthResponse.fromJson(response.data);
+  }
+
+  // Для обратной совместимости (deprecated)
+  @Deprecated('Use loginWithCode or loginWithPassword instead')
+  Future<AuthResponse> login({
+    String? email,
+    String? phone,
+    required String code,
+  }) async {
+    return loginWithCode(email: email, phone: phone, code: code);
   }
 
   Future<User> getCurrentUser() async {
@@ -210,7 +234,8 @@ class ApiClient {
     await _tokenStorage.clearTokens();
   }
 
-  // Группы
+  // ==================== ГРУППЫ ====================
+  
   Future<Group> createGroup(String name, {String? description}) async {
     final response = await _dio.post(
       '/groups',
@@ -241,7 +266,8 @@ class ApiClient {
     await _dio.delete('/groups/$id');
   }
 
-  // Студенты
+  // ==================== СТУДЕНТЫ ====================
+  
   Future<Student> createStudent(String name, {bool isActive = true}) async {
     final response = await _dio.post(
       '/students',
@@ -274,7 +300,8 @@ class ApiClient {
     await _dio.delete('/students/$id');
   }
 
-  // Отсутствия
+  // ==================== ОТСУТСТВИЯ ====================
+  
   Future<Absence> createAbsence(CreateAbsenceDto dto) async {
     final response = await _dio.post('/absences', data: dto.toJson());
     return Absence.fromJson(response.data);
@@ -304,7 +331,8 @@ class ApiClient {
     await _dio.delete('/absences/$id');
   }
 
-  // Типы дежурств
+  // ==================== ТИПЫ ДЕЖУРСТВ ====================
+  
   Future<DutyType> createDutyType(CreateDutyTypeDto dto) async {
     final response = await _dio.post('/duty-types', data: dto.toJson());
     return DutyType.fromJson(response.data);
@@ -331,7 +359,8 @@ class ApiClient {
     await _dio.delete('/duty-types/$id');
   }
 
-  // Расписания
+  // ==================== РАСПИСАНИЯ ====================
+  
   Future<DutySchedule> createDutySchedule(CreateDutyScheduleDto dto) async {
     final response = await _dio.post('/duty-schedules', data: dto.toJson());
     return DutySchedule.fromJson(response.data);
@@ -361,7 +390,8 @@ class ApiClient {
     await _dio.delete('/duty-schedules/$id');
   }
 
-  // Дни дежурств
+  // ==================== ДНИ ДЕЖУРСТВ ====================
+  
   Future<DutyDay> createDutyDay(CreateDutyDayDto dto) async {
     final response = await _dio.post('/duty-days', data: dto.toJson());
     return DutyDay.fromJson(response.data);
@@ -410,7 +440,8 @@ class ApiClient {
     await _dio.delete('/duty-days/$scheduleId');
   }
 
-  // События
+  // ==================== СОБЫТИЯ ====================
+  
   Future<List<DutyEvent>> generateDutyEvents(
     int scheduleId,
     DateTime date,
@@ -454,28 +485,40 @@ class ApiClient {
     return DutyEvent.fromJson(response.data);
   }
 
-  // Связи студент-группа
-  Future<void> addStudentToGroup(int groupId, int studentId) async {
-    await _dio.post('/groups/$groupId/students/$studentId');
-  }
+  // ==================== СВЯЗИ СТУДЕНТ-ГРУППА ====================
+  
+Future<void> addStudentToGroup(int groupId, int studentId) async {
+  await _dio.post('/groups/$groupId/students/$studentId');
+}
 
-  Future<List<Student>> getGroupStudents(int groupId) async {
-    final response = await _dio.get('/groups/$groupId/students');
-    return (response.data as List)
-        .map((json) => Student.fromJson(json))
-        .toList();
+Future<List<Student>> getGroupStudents(int groupId) async {
+  final response = await _dio.get('/groups/$groupId/students');
+  
+  // Сервер возвращает список StudentsGroup объектов
+  // Каждый объект содержит поле 'student' с данными студента
+  final List<dynamic> data = response.data;
+  final List<Student> students = [];
+  
+  for (var item in data) {
+    if (item is Map && item.containsKey('student')) {
+      final studentJson = item['student'] as Map<String, dynamic>;
+      students.add(Student.fromJson(studentJson));
+    }
   }
+  
+  return students;
+}
 
-  Future<void> removeStudentFromGroup(int groupId, int studentId) async {
-    await _dio.delete('/groups/$groupId/students/$studentId');
+Future<void> removeStudentFromGroup(int groupId, int studentId) async {
+  await _dio.delete('/groups/$groupId/students/$studentId');
   }
 }
 
 @freezed
 abstract class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
-    @JsonKey(name: 'access_token') required String accessToken,
-    @JsonKey(name: 'refresh_token') required String refreshToken,
+    @JsonKey(name: 'accessToken') required String accessToken,
+    @JsonKey(name: 'refreshToken') required String refreshToken,
   }) = _AuthResponse;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
@@ -485,8 +528,8 @@ abstract class AuthResponse with _$AuthResponse {
 @freezed
 abstract class RefreshResponse with _$RefreshResponse {
   const factory RefreshResponse({
-    @JsonKey(name: 'access_token') required String accessToken,
-    @JsonKey(name: 'refresh_token') required String refreshToken,
+    @JsonKey(name: 'accessToken') required String accessToken,
+    @JsonKey(name: 'refreshToken') required String refreshToken,
   }) = _RefreshResponse;
 
   factory RefreshResponse.fromJson(Map<String, dynamic> json) =>
